@@ -6,7 +6,6 @@ import sqlalchemy as sa
 def make_model(period):
     class Result(statscache.plugins.BaseModel):
         __tablename__ = 'data_volume_%i' % period
-        id = sa.Column(sa.Integer, primary_key=True)
         timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
         volume = sa.Column(sa.Integer, nullable=False)
     return Result
