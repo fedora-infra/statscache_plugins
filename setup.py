@@ -37,7 +37,8 @@ setup(
     ],
     entry_points={
         'statscache.plugin': [
-            "volume = statscache_plugins.volume",
+            "volume = statscache_plugins.volume.simple",
+            "volume_by_topic = statscache_plugins.volume.by_topic",
         ]
     },
 )
