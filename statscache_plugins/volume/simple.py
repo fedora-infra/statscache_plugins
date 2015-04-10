@@ -1,13 +1,9 @@
 import statscache.plugins
 
-import sqlalchemy as sa
-
 
 def make_model(period):
-    class Result(statscache.plugins.BaseModel):
+    class Result(statscache.plugins.ScalarModel):
         __tablename__ = 'data_volume_%i' % period
-        timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
-        volume = sa.Column(sa.Integer, nullable=False)
     return Result
 
 
@@ -20,6 +16,7 @@ class Plugin(statscache.plugins.BasePlugin):
     It can give you a baseline quantity against which you could normalize
     other statistics.
     """
+
     def handle(self, session, timestamp, messages):
-        result = self.model(timestamp=timestamp, volume=len(messages))
+        result = self.model(timestamp=timestamp, scalar=len(messages))
         session.add(result)
