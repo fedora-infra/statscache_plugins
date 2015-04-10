@@ -23,9 +23,7 @@ class Plugin(statscache.plugins.BasePlugin):
     the bus for each category.
     """
     def handle(self, session, timestamp, messages):
-        categories = self.get_default_categories(session)
         volumes = collections.defaultdict(int)
-        volumes.update(zip(categories, [0] * len(categories)))
         for msg in messages:
             volumes[msg['topic'].split('.')[3]] += 1
 
@@ -35,8 +33,3 @@ class Plugin(statscache.plugins.BasePlugin):
                 volume=len(messages),
                 category=category)
             session.add(result)
-
-    def get_default_categories(self, session):
-        # TODO -- get the existing categories out of the session
-        # XXX - do we even want to do this?  Maybe not.
-        return []

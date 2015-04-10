@@ -23,9 +23,7 @@ class Plugin(statscache.plugins.BasePlugin):
     the bus for each topic.
     """
     def handle(self, session, timestamp, messages):
-        topics = self.get_default_topics(session)
         volumes = collections.defaultdict(int)
-        volumes.update(zip(topics, [0] * len(topics)))
         for msg in messages:
             volumes[msg['topic']] += 1
 
@@ -35,8 +33,3 @@ class Plugin(statscache.plugins.BasePlugin):
                 volume=len(messages),
                 topic=topic)
             session.add(result)
-
-    def get_default_topics(self, session):
-        # TODO -- get the existing topics out of the session
-        # XXX - do we even want to do this?  Maybe not.
-        return []
