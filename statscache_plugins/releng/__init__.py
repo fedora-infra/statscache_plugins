@@ -1,5 +1,6 @@
-import datetime
 import json
+import os.path
+import pkgutil
 
 import statscache.plugins
 
@@ -22,14 +23,19 @@ class Plugin(statscache.plugins.BasePlugin):
     release engineering dashboard.
     """
 
+    def __init__(self, config, model):
+        super(Plugin, self).__init__(config, model)
+        self._plugins = None
+        self._plugins = self.load_plugins(config, model)
+
     def handle(self, session, timestamp, messages):
         rows = []
         try:
-            for message in messages:
-                for formatter in self.formatters:
-                    row = formatter(message)
-                    if row:
-                        session.add(row)
+            for plugin in self._plugins:
+                rows.extend(plugin,handle(session, timestamp, messages))
+            # FIXME: need to write in a single db hit
+            for row in rows:
+                session.add(row)
             session.commit()
         except:
             session.flush()
@@ -37,35 +43,16 @@ class Plugin(statscache.plugins.BasePlugin):
     def cleanup(self):
         pass
 
-    @property
-    def formatters(self):
-        if getattr(self, '_formatters', None):
-            return self._formatters
-        self._formatters = [
-            getattr(self, item) for item in dir(self)
-            if item.startswith('clean_')
-        ]
-        return self._formatters
-
-    def clean_cloud_images_upload_base(self, message):
-        if message['topic'] != 'org.fedoraproject.prod.fedimg.image.upload':
-            return
-        if message['msg'].get('status') != 'completed':
-            return
-        return self.model(
-            timestamp=datetime.datetime.fromtimestamp(message['timestamp']),
-            message=json.dumps({
-                'name': message['msg']['image_name'],
-                'ami_name': '{name}, {region}'.format(
-                    name=message['msg']['extra']['id'],
-                    region=message['msg']['destination']),
-                'ami_link': (
-                    "https://redirect.fedoraproject.org/console.aws."
-                    "amazon.com/ec2/v2/home?region={region}"
-                    "#LaunchInstanceWizard:ami={name}".format(
-                        name=message['msg']['extra']['id'],
-                        region=message['msg']['destination'])
-                )
-            }),
-            category: 'cloud_images_upload_base'
-        )
+    def load_plugins(self, config, model):
+        if getattr(self, '_plugins', None):
+            return self._plugins
+        self._plugins = []
+        for importer, package_name, _ in pkgutil.iter_modules(['./plugins']):
+            full_package_name = '{}.{}'.format('plugins', package_name)
+            module = importer.find_module(
+                package_name).load_module(full_package_name)
+            plugin = getattr(module, 'Plugin', None)
+            if plugin and issubclass(
+                    plugin, statscache.plugins.BasePlugin):
+                self._plugins.append(plugin(config, model))
+        return self._plugins
