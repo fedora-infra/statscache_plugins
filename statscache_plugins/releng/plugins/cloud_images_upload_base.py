@@ -7,11 +7,13 @@ class Plugin(statscache.plugins.BasePlugin):
     description = """
     Latest build logs for successful upload of cloud images
     """
+    topics = [
+        'org.fedoraproject.prod.fedimg.image.upload'
+    ]
     def handle(self, session, timestamp, messages):
         rows = []
         for message in messages:
-            if not (message['topic'] == \
-                    'org.fedoraproject.prod.fedimg.image.upload' and
+            if not (message['topic'] in self.topics and
                     message['msg'].get('status') == 'completed'):
                 continue
             rows.append(
