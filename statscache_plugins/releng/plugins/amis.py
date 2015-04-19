@@ -2,14 +2,16 @@ import statscache.plugins
 
 
 class Plugin(statscache.plugins.BasePlugin):
-    name = "releng, cloud images upload base"
-    summary = "Build logs for successful upload of cloud images"
+    name = "releng, amis"
+    summary = "Build logs for successful upload/test of cloud images"
     description = """
-    Latest build logs for successful upload of cloud images
+    Latest build logs for successful upload/test of cloud images
     """
     topics = [
-        'org.fedoraproject.prod.fedimg.image.upload'
+        'org.fedoraproject.prod.fedimg.image.upload',
+        'org.fedoraproject.prod.fedimg.image.test'
     ]
+
     def handle(self, session, timestamp, messages):
         rows = []
         for message in messages:
@@ -32,7 +34,7 @@ class Plugin(statscache.plugins.BasePlugin):
                                 region=message['msg']['destination'])
                         )
                     }),
-                    category='cloud_images_upload_base'
+                    category='ami-{}'.format(message['topic'].split('.')[-1])
                 )
             )
         return rows
