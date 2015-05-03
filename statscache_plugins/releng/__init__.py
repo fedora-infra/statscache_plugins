@@ -1,16 +1,24 @@
+import datetime
 import json
+import logging
 import os.path
 import pkgutil
+import requests
+import time
+import sqlalchemy as sa
 
 import statscache.plugins
 
+log = logging.getLogger('statscache')
 
 FREQUENCIES = [60]
 
 
 def make_model(period):
-    class Result(statscache.plugins.BaseModel):
+    class Result(statscache.plugins.CategorizedModel):
         __tablename__ = 'data_releng_dashboard'
+        message = sa.Column(sa.UnicodeText, nullable=False)
+        category_constraint = sa.Column(sa.UnicodeText, nullable=True)
 
     return Result
 
@@ -22,6 +30,7 @@ class Plugin(statscache.plugins.BasePlugin):
     Recent release engineering event logs to be used for rendering
     release engineering dashboard.
     """
+    datagrepper_endpoint = 'https://apps.fedoraproject.org/datagrepper/raw/'
 
     def __init__(self, config, model):
         super(Plugin, self).__init__(config, model)
@@ -32,13 +41,30 @@ class Plugin(statscache.plugins.BasePlugin):
         rows = []
         try:
             for plugin in self._plugins:
-                rows.extend(plugin,handle(session, timestamp, messages))
+                try:
+                    rows.extend(plugin.handle(session, timestamp, messages))
+                except Exception as e:
+                    log.error(
+                        "STATSCAHCE_PLUGIN_RELENG_COMPONENT_ERROR: {}".format(e),
+                        exc_info=True)
             # FIXME: need to write in a single db hit
-            for row in rows:
-                session.add(row)
+            session.add_all(rows)
             session.commit()
-        except:
+        except Exception as e:
+            log.error(
+                "STATSCACHE_PLUGIN_RELENG_ERROR: {}".format(e), exc_info=True)
             session.flush()
+
+    def initialize(self, session):
+        for plugin in self._plugins:
+            if getattr(plugin, 'initialize', None) is None:
+                continue
+            try:
+                plugin.initialize(session, self.datagrepper_endpoint)
+            except Exception as e:
+                log.error(
+                    'STATSCACHE_PLUGIN_RELENG_INITIALIZE_ERROR: {}'.format(e),
+                    exc_info=True)
 
     def cleanup(self):
         pass
@@ -47,7 +73,8 @@ class Plugin(statscache.plugins.BasePlugin):
         if getattr(self, '_plugins', None):
             return self._plugins
         self._plugins = []
-        for importer, package_name, _ in pkgutil.iter_modules(['./plugins']):
+        for importer, package_name, _ in pkgutil.iter_modules(
+                [os.path.join(__path__[0], 'plugins')]):
             full_package_name = '{}.{}'.format('plugins', package_name)
             module = importer.find_module(
                 package_name).load_module(full_package_name)
