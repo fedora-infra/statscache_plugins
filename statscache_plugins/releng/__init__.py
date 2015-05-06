@@ -44,15 +44,15 @@ class Plugin(statscache.plugins.BasePlugin):
                 try:
                     rows.extend(plugin.handle(session, timestamp, messages))
                 except Exception as e:
-                    log.error(
-                        "STATSCAHCE_PLUGIN_RELENG_COMPONENT_ERROR: {}".format(e),
-                        exc_info=True)
+                    log.exception(
+                        "Error in releng plugin '{}': {}".format(
+                            plugin,idx, e), exc_info=True)
             # FIXME: need to write in a single db hit
             session.add_all(rows)
             session.commit()
         except Exception as e:
-            log.error(
-                "STATSCACHE_PLUGIN_RELENG_ERROR: {}".format(e), exc_info=True)
+            log.exception(
+                "Error in releng plugin: {}".format(e), exc_info=True)
             session.flush()
 
     def initialize(self, session):
@@ -62,9 +62,9 @@ class Plugin(statscache.plugins.BasePlugin):
             try:
                 plugin.initialize(session, self.datagrepper_endpoint)
             except Exception as e:
-                log.error(
-                    'STATSCACHE_PLUGIN_RELENG_INITIALIZE_ERROR: {}'.format(e),
-                    exc_info=True)
+                log.exception(
+                    'Error during initializing releng plugin '{}': {}'.format(
+                        plugin.idx, e), exc_info=True)
 
     def cleanup(self):
         pass
