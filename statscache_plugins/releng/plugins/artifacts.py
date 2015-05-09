@@ -41,7 +41,7 @@ class Plugin(statscache.plugins.BasePlugin):
         if isinstance(info, dict):
             options = info['request'][-1];
             if options.get('format'):
-                srpm = '{} ({})'format(
+                srpm = '{} ({})'.format(
                     srpm, options['format'])
             branch = info['request'][1]
             if branch != 'rawhide':
