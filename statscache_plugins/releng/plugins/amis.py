@@ -26,6 +26,7 @@ class Plugin(statscache.plugins.BasePlugin):
             if not (message['topic'] in self.topics and
                     message['msg'].get('status') == 'completed'):
                 continue
+            status = 'completed'
             arch = message['msg']['image_name'].split('.')[1]
             tokens = message['msg']['image_name'].split('.')[0].split('-')
             flavour = tokens[2].lower()
@@ -46,8 +47,7 @@ class Plugin(statscache.plugins.BasePlugin):
             self._seen[last_seen_key] = msg_timestamp
             msg = json.dumps({
                 'name': message['msg']['image_name'],
-                'extra_text': '{name}, {region}'.format(
-                    name=message['msg']['extra']['id'],
+                'extra_text': '{region}'.format(
                     region=message['msg']['destination']),
                 'extra_link': (
                     "https://redirect.fedoraproject.org/console.aws."
@@ -55,7 +55,8 @@ class Plugin(statscache.plugins.BasePlugin):
                     "#LaunchInstanceWizard:ami={name}".format(
                         name=message['msg']['extra']['id'],
                         region=message['msg']['destination'])
-                )
+                ),
+                'status': status
             })
             result = session.query(self.model).filter(
                 self.model.category == category,
@@ -95,7 +96,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 }
             )
             rows = self.handle(session, datetime.datetime.now(),
-                               resp.json().get('rawmsgs', []))
+                               resp.json().get('raw_messages', []))
             session.add_all(rows)
             session.commit()
 
