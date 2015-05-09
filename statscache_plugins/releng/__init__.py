@@ -15,7 +15,7 @@ FREQUENCIES = [60]
 
 
 def make_model(period):
-    class Result(statscache.plugins.CategorizedModel):
+    class Result(statscache.plugins.CategorizedLogModel):
         __tablename__ = 'data_releng_dashboard'
         message = sa.Column(sa.UnicodeText, nullable=False)
         category_constraint = sa.Column(sa.UnicodeText, nullable=True)
@@ -36,6 +36,28 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(config, model)
         self._plugins = None
         self._plugins = self.load_plugins(config, model)
+
+    @property
+    def layout(self):
+        return {
+            'groups': [
+                {
+                    'id': 'amis',
+                    'components': [
+                        {
+                            'id': 'ami-branched',
+                            'name': 'AMIs (branched)',
+                            'link_for': 'name'
+                        },
+                        {
+                            'id': 'ami-rawhide',
+                            'name': 'AMIs (rawhide)',
+                            'link_for': 'message'
+                        }
+                    ]
+                }
+            ]
+        }
 
     def handle(self, session, timestamp, messages):
         rows = []
@@ -63,7 +85,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 plugin.initialize(session, self.datagrepper_endpoint)
             except Exception as e:
                 log.exception(
-                    'Error during initializing releng plugin '{}': {}'.format(
+                    "Error during initializing releng plugin '{}': {}".format(
                         plugin.idx, e), exc_info=True)
 
     def cleanup(self):
