@@ -58,9 +58,9 @@ class Plugin(statscache.plugins.BasePlugin):
                 ),
                 'status': status
             })
-            result = session.query(self.model).filter(
-                self.model.category == category,
-                self.model.category_constraint == category_constraint)
+            result = session.query(self.model)\
+                .filter(self.model.category == category)\
+                .filter(self.model.category_constraint == category_constraint)
             row = result.first()
             if row:
                 row.timestamp = msg_timestamp
