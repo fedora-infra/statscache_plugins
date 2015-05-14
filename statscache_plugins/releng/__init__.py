@@ -11,10 +11,8 @@ FREQUENCIES = [60]
 
 
 def make_model(period):
-    class Result(statscache.plugins.CategorizedLogModel):
+    class Result(statscache.plugins.ConstrainedCategorizedLogModel):
         __tablename__ = 'data_releng_dashboard'
-        message = sa.Column(sa.UnicodeText, nullable=False)
-        category_constraint = sa.Column(sa.UnicodeText, nullable=True)
 
     return Result
 
