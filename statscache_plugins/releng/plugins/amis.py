@@ -42,7 +42,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 message['msg']['image_name'], ec2_region)
             last_seen_key = '{}:{}'.format(category, category_constraint)
             last_seen = self._seen.get(last_seen_key)
-            if last_seen and last_seen <= msg_timestamp:
+            if last_seen and msg_timestamp <= last_seen:
                 continue
             self._seen[last_seen_key] = msg_timestamp
             msg = json.dumps({
