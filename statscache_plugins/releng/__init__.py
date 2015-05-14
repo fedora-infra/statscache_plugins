@@ -36,6 +36,19 @@ class Plugin(statscache.plugins.BasePlugin):
         return {
             'groups': [
                 {
+                    'id': 'updates',
+                    'components': [
+                        {
+                            'id': 'updates-fedora',
+                            'name': 'Repo Updates (Fedora)',
+                        },
+                        {
+                            'id': 'updates-epel',
+                            'name': 'Repo Updates (Fedora)',
+                        }
+                    ]
+                },
+                {
                     'id': 'amis',
                     'components': [
                         {
