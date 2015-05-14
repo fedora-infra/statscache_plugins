@@ -1,10 +1,6 @@
-import datetime
-import json
 import logging
 import os.path
 import pkgutil
-import requests
-import time
 import sqlalchemy as sa
 
 import statscache.plugins
@@ -68,7 +64,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 except Exception as e:
                     log.exception(
                         "Error in releng plugin '{}': {}".format(
-                            plugin,idx, e), exc_info=True)
+                            plugin.idx, e), exc_info=True)
             # FIXME: need to write in a single db hit
             session.add_all(rows)
             session.commit()
@@ -103,5 +99,8 @@ class Plugin(statscache.plugins.BasePlugin):
             plugin = getattr(module, 'Plugin', None)
             if plugin and issubclass(
                     plugin, statscache.plugins.BasePlugin):
+                log.info("Loading plugin %r" % plugin)
                 self._plugins.append(plugin(config, model))
+            else:
+                log.info("Not loading %r.  Not a plugin." % plugin)
         return self._plugins
