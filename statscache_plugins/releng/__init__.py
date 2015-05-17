@@ -36,6 +36,27 @@ class Plugin(statscache.plugins.BasePlugin):
         return {
             'groups': [
                 {
+                    'id': 'compose',
+                    'components': [
+                        {
+                            'id': 'compose-rawhide_primary',
+                            'name': 'Rawhide Compose (Primary)',
+                        },
+                        {
+                            'id': 'compose-rawhide_arm',
+                            'name': 'Rawhide Compose (arm)',
+                        },
+                        {
+                            'id': 'compose-rawhide_ppc',
+                            'name': 'Rawhide Compose (ppc)',
+                        },
+                        {
+                            'id': 'compose-rawhide_s390',
+                            'name': 'Rawhide Compose (s390)',
+                        }
+                    ]
+                },
+                {
                     'id': 'updates',
                     'components': [
                         {
