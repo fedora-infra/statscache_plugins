@@ -83,7 +83,31 @@ class Plugin(statscache.plugins.BasePlugin):
                             'link_for': 'message'
                         }
                     ]
-                }
+                },
+                {
+                    'id': 'appliance',
+                    'name': 'Appliance builds (rawhide)',
+                    'components': [
+                        {
+                            'id': 'artifact-appliance_armhfp',
+                            'name': 'armhfp',
+                        }
+                    ]
+                },
+                {
+                    'id': 'livecd',
+                    'name': 'LiveCD builds (rawhide)',
+                    'components': [
+                        {
+                            'id': 'artifact-livecd_x86_64',
+                            'name': 'x86_64',
+                        },
+                        {
+                            'id': 'artifact-livecd_i686',
+                            'name': 'i686',
+                        }
+                    ]
+                },
             ]
         }
 
