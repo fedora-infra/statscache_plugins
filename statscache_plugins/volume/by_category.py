@@ -1,35 +1,81 @@
 import collections
+import datetime
 
 import statscache.plugins
+import statscache.schedule
 
 import sqlalchemy as sa
+import requests
 
 
-def make_model(period):
-    class Result(statscache.plugins.BaseModel):
-        __tablename__ = 'data_volume_by_category_%i' % period
-        timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
-        volume = sa.Column(sa.Integer, nullable=False)
-        category = sa.Column(sa.UnicodeText, nullable=False, index=True)
-
-    return Result
-
-
-class Plugin(statscache.plugins.BasePlugin):
+class PluginMixin(object):
     name = "volume, by category"
     summary = "the count of messages, organized by category"
     description = """
     For any given time window, the number of messages that come across
     the bus for each category.
     """
-    def handle(self, session, timestamp, messages):
+
+    def make_model(self):
+        class Result(statscache.plugins.BaseModel):
+            __tablename__ = 'data_volume_by_category_%s' % self.frequency
+            timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
+            volume = sa.Column(sa.Integer, nullable=False)
+            category = sa.Column(sa.UnicodeText, nullable=False, index=True)
+
+        return Result
+
+    def handle(self, session, messages):
         volumes = collections.defaultdict(int)
         for msg in messages:
-            volumes[msg['topic'].split('.')[3]] += 1
+            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
+            volumes[(msg['topic'].split('.')[3],
+                     self.frequency.next(msg_timestamp))] += 1
 
-        for category, volume in volumes.items():
-            result = self.model(
-                timestamp=timestamp,
-                volume=len(messages),
-                category=category)
-            session.add(result)
+        for key, volume in volumes.items():
+            category, timestamp = key
+            result = session.query(self.model)\
+                .filter(self.model.category == category)\
+                .filter(self.model.timestamp == timestamp)
+            row = result.first()
+            if row:
+                row.volume += volume
+            else:
+                row = self.model(
+                    timestamp=timestamp,
+                    volume=volume,
+                    category=category)
+            session.add(row)
+            session.commit()
+
+    def initialize(self, session, datagrepper_endpoint=None):
+        latest = session.query(self.model).order_by(
+            self.model.timestamp.desc()).first()
+        delta = 2000000
+        if latest:
+            latest.volume = 0
+            session.add(latest)
+            session.commit()
+            delta = int(
+                (datetime.datetime.now() - latest.timestamp).total_seconds())
+        resp = requests.get(
+            self.datagrepper_endpoint,
+            params={
+                'delta': delta,
+                'rows_per_page': 100,
+                'order': 'desc',
+            }
+        )
+        self.handle(session, resp.json().get('raw_messages', []))
+
+
+class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1s')
+
+
+class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('5s')
+
+
+class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1m')
