@@ -1,20 +1,10 @@
 import logging
 import os.path
 import pkgutil
-import sqlalchemy as sa
 
 import statscache.plugins
 
 log = logging.getLogger('statscache')
-
-FREQUENCIES = [60]
-
-
-def make_model(period):
-    class Result(statscache.plugins.ConstrainedCategorizedLogModel):
-        __tablename__ = 'data_releng_dashboard'
-
-    return Result
 
 
 class Plugin(statscache.plugins.BasePlugin):
@@ -30,6 +20,12 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(config, model)
         self._plugins = None
         self._plugins = self.load_plugins(config, model)
+
+    def make_model(self):
+        class Result(statscache.plugins.ConstrainedCategorizedLogModel):
+            __tablename__ = 'data_releng_dashboard'
+
+        return Result
 
     @property
     def layout(self):
