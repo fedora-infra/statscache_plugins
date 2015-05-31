@@ -4,8 +4,8 @@ import datetime
 import statscache.plugins
 import statscache.schedule
 
-import sqlalchemy as sa
 import requests
+import sqlalchemy as sa
 
 
 class PluginMixin(object):
@@ -57,7 +57,9 @@ class PluginMixin(object):
             session.add(latest)
             session.commit()
             delta = int(
-                (datetime.datetime.now() - latest.timestamp).total_seconds())
+                (datetime.datetime.now() -
+                 self.frequency.prev(latest.timestamp)).total_seconds()
+            )
         resp = requests.get(
             self.datagrepper_endpoint,
             params={
