@@ -16,10 +16,10 @@ class Plugin(statscache.plugins.BasePlugin):
     """
     datagrepper_endpoint = 'https://apps.fedoraproject.org/datagrepper/raw/'
 
-    def __init__(self, config, model):
-        super(Plugin, self).__init__(config, model)
+    def __init__(self, config):
+        super(Plugin, self).__init__(config)
         self._plugins = None
-        self._plugins = self.load_plugins(config, model)
+        self._plugins = self.load_plugins(config, self.model)
 
     def make_model(self):
         class Result(statscache.plugins.ConstrainedCategorizedLogModel):

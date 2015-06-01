@@ -11,7 +11,6 @@ class TestRelengPlugin(unittest.TestCase):
             "statscache.consumer.enabled": True,
             "statscache.sqlalchemy.uri": "sqlite:////var/tmp/statscache-dev-db.sqlite",
         }
-        self.model = statscache_plugins.releng.make_model(60)
 
     def _make_session(self):
         uri = self.config['statscache.sqlalchemy.uri']
@@ -19,6 +18,6 @@ class TestRelengPlugin(unittest.TestCase):
         return statscache.plugins.init_model(uri)
 
     def test_init(self):
+        plugin = statscache_plugins.releng.Plugin(self.config)
         session = self._make_session()
-        plugin = statscache_plugins.releng.Plugin(self.config, self.model)
         plugin.initialize(session)
