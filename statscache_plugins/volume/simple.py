@@ -1,4 +1,5 @@
 import statscache.plugins
+import statscache.schedule
 from statscache_plugins.volume.utils import VolumePluginMixin
 
 
