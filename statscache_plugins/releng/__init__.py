@@ -71,12 +71,14 @@ class Plugin(statscache.plugins.BasePlugin):
                         {
                             'id': 'ami-branched',
                             'name': 'AMIs (branched)',
-                            'link_for': 'name'
+                            'link_for': 'name',
+                            'show_time_at': False
                         },
                         {
                             'id': 'ami-rawhide',
                             'name': 'AMIs (rawhide)',
-                            'link_for': 'message'
+                            'link_for': 'message',
+                            'show_time_at': False
                         }
                     ]
                 },
@@ -87,6 +89,8 @@ class Plugin(statscache.plugins.BasePlugin):
                         {
                             'id': 'artifact-appliance_armhfp',
                             'name': 'armhfp',
+                            'show_status': False,
+                            'show_time_at': False
                         }
                     ]
                 },
@@ -97,14 +101,40 @@ class Plugin(statscache.plugins.BasePlugin):
                         {
                             'id': 'artifact-livecd_x86_64',
                             'name': 'x86_64',
+                            'show_time_at': False
                         },
                         {
                             'id': 'artifact-livecd_i686',
                             'name': 'i686',
+                            'show_time_at': False
                         }
                     ]
                 },
-            ]
+            ],
+            'default_options': {
+                'show_time_at': True,
+                'show_status': True,
+                'status_verb_map': {
+                    'complete': 'completed',
+                    'start': 'started',
+                    'open': 'opened',
+                    'close': 'closed'
+                },
+                'status_class_map': {
+                    'complete': 'text-primary',
+                    'start': 'text-warning',
+                    'failed': 'text-danger',
+                    'closed': 'text-primary',
+                    'open': 'text-warning',
+                    'closed': 'text-primary',
+                    'opened': 'text-warning',
+                    'failed': 'text-danger'
+                },
+                'old_log_threshold': {
+                    'key': 'hours',
+                    'value': 24
+                }
+            }
         }
 
     def handle(self, session, timestamp, messages):
