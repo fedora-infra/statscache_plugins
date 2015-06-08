@@ -1,4 +1,5 @@
 import collections
+import datetime
 
 import statscache.plugins
 from statscache_plugins.volume.utils import VolumePluginMixin
@@ -24,19 +25,30 @@ class PluginMixin(VolumePluginMixin):
 
         return Result
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         volumes = collections.defaultdict(int)
         for msg in messages:
+            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
             packages = fedmsg.meta.msg2packages(msg, **self.config)
             for package in packages:
-                volumes[package] += 1
+                volumes[
+                    (package, self.frequency.next(msg_timestamp))] += 1
 
-        for package, volume in volumes.items():
-            result = self.model(
-                timestamp=timestamp,
-                volume=len(messages),
-                package=package)
-            session.add(result)
+        for key, volume in volumes.items():
+            package, timestamp = key
+            result = session.query(self.model)\
+                .filter(self.model.package == package)\
+                .filter(self.model.timestamp == timestamp)
+            row = result.first()
+            if row:
+                row.volume += volume
+            else:
+                row = self.model(
+                    timestamp=timestamp,
+                    volume=volume,
+                    package=package)
+            session.add(row)
+        session.commit()
 
 
 class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):

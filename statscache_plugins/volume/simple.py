@@ -1,3 +1,6 @@
+import collections
+import datetime
+
 import statscache.plugins
 import statscache.schedule
 from statscache_plugins.volume.utils import VolumePluginMixin
@@ -18,9 +21,24 @@ class PluginMixin(VolumePluginMixin):
             __tablename__ = 'data_volume_%s' % self.frequency
         return Result
 
-    def handle(self, session, timestamp, messages):
-        result = self.model(timestamp=timestamp, scalar=len(messages))
-        session.add(result)
+    def handle(self, session, messages):
+        volumes = collections.defaultdict(int)
+        for msg in messages:
+            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
+            volumes[msg_timestamp] += 1
+        for timestamp, volume in volumes.items():
+
+            result = session.query(self.model)\
+                .filter(self.model.timestamp == timestamp)
+            row = result.first()
+            if row:
+                row.scalar += volume
+            else:
+                row = self.model(
+                    timestamp=timestamp,
+                    scalar=volume)
+            session.add(row)
+        session.commit()
 
 
 class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):

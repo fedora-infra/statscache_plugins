@@ -12,13 +12,13 @@ class Plugin(statscache.plugins.BasePlugin):
     description = """
     Latest build logs for successful upload/test of cloud images
     """
-    artifacts = ('appliance', 'livecd') 
+    artifacts = ('appliance', 'livecd')
 
     def __init__(self, *args, **kwargs):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         for message in messages:
             if not (message['msg']['owner'] == 'masher' and
@@ -91,7 +91,7 @@ class Plugin(statscache.plugins.BasePlugin):
         info = msg.get('info')
         srpm = msg['srpm']
         if isinstance(info, dict):
-            options = info['request'][-1];
+            options = info['request'][-1]
             if options.get('format'):
                 srpm = '{} ({})'.format(
                     srpm, options['format'])

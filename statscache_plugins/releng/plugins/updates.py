@@ -24,13 +24,14 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         log.info("In handle with %i messages" % len(messages))
         for message in messages:
             if not message['topic'] in self.topics:
                 continue
             status = 'synced out'
-            msg_timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
+            msg_timestamp = datetime.datetime.fromtimestamp(
+                message['timestamp'])
 
             distro = message['topic'].split('.')[-2]
             release = message['msg']['release']
@@ -47,8 +48,8 @@ class Plugin(statscache.plugins.BasePlugin):
             msg = json.dumps({
                 'name': name,
                 'status': status
-                #'extra_text': 'wat',  # No extra text for updates..
-                #'extra_link': 'wat',  # No link for updates messages
+                # 'extra_text': 'wat',  # No extra text for updates..
+                # 'extra_link': 'wat',  # No link for updates messages
             })
             result = session.query(self.model)\
                 .filter(self.model.category == category)\

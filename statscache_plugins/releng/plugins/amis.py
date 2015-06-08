@@ -21,20 +21,21 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         for message in messages:
             if not (message['topic'] in self.topics and
                     message['msg'].get('status') == 'completed'):
                 continue
             status = 'completed'
-            arch = message['msg']['image_name'].split('.')[1]
+            # arch = message['msg']['image_name'].split('.')[1]
             tokens = message['msg']['image_name'].split('.')[0].split('-')
-            flavour = tokens[2].lower()
+            # flavour = tokens[2].lower()
             version = tokens[3].lower()
-            tstamp = tokens[4]
+            # tstamp = tokens[4]
             ec2_region = message['msg']['destination'].split('(')[1][:-1]
-            msg_timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
+            msg_timestamp = datetime.datetime.fromtimestamp(
+                message['timestamp'])
 
             branch = version if version == 'rawhide' else 'branched'
 

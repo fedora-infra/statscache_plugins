@@ -30,7 +30,7 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         for message in messages:
             m = self.p.match(message['topic'])
@@ -40,7 +40,7 @@ class Plugin(statscache.plugins.BasePlugin):
             if topic not in self.topics:
                 continue
             tokens = topic.split('.')
-            agent = (len(tokens) == 6 and tokens[-1]) or 'compose'
+            # agent = (len(tokens) == 6 and tokens[-1]) or 'compose'
             arch = message['msg'].get('arch') or 'primary'
             branch = tokens[4]
             name = tokens[-1]
