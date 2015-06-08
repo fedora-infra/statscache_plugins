@@ -142,7 +142,7 @@ class Plugin(statscache.plugins.BasePlugin):
         try:
             for plugin in self._plugins:
                 try:
-                    rows.extend(plugin.handle(session, messages))
+                    rows.extend(plugin.handle(session, messages) or [])
                 except Exception as e:
                     log.exception(
                         "Error in releng plugin '{}': {}".format(
