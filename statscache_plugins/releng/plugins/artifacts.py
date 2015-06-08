@@ -80,8 +80,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 'user': 'masher'
             }
         )
-        rows = self.handle(session, datetime.datetime.now(),
-                           resp.json().get('raw_messages', []))
+        rows = self.handle(session, resp.json().get('raw_messages', []))
         session.add_all(rows)
         session.commit()
 

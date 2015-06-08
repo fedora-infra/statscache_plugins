@@ -94,7 +94,6 @@ class Plugin(statscache.plugins.BasePlugin):
                 datagrepper_endpoint,
                 params=params
             )
-            rows = self.handle(session, datetime.datetime.now(),
-                               resp.json().get('raw_messages', []))
+            rows = self.handle(session, resp.json().get('raw_messages', []))
             session.add_all(rows)
             session.commit()

@@ -86,7 +86,6 @@ class Plugin(statscache.plugins.BasePlugin):
                     'topic': topic,
                 }
             )
-            now = datetime.datetime.now()
             messages = resp.json().get('raw_messages', [])
-            self.handle(session, now, messages)
+            self.handle(session, messages)
             session.commit()
