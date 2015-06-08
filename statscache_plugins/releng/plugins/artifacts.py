@@ -21,8 +21,8 @@ class Plugin(statscache.plugins.BasePlugin):
     def handle(self, session, messages):
         rows = []
         for message in messages:
-            if not (message['msg']['owner'] == 'masher' and
-                    message['msg']['method'] in self.artifacts):
+            if not (message['msg'].get('owner') == 'masher' and
+                    message['msg'].get('method') in self.artifacts):
                 continue
             artifact = message['msg']['method']
             srpm_name, srpm_link, arch = self.get_srpm_details(message['msg'])
