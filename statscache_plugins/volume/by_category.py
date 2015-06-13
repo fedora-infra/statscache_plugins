@@ -3,12 +3,12 @@ import datetime
 
 import statscache.plugins
 import statscache.schedule
+from statscache_plugins.volume.utils import VolumePluginMixin
 
 import sqlalchemy as sa
-import requests
 
 
-class PluginMixin(object):
+class PluginMixin(VolumePluginMixin):
     name = "volume, by category"
     summary = "the count of messages, organized by category"
     description = """
@@ -47,26 +47,6 @@ class PluginMixin(object):
                     category=category)
             session.add(row)
             session.commit()
-
-    def initialize(self, session, datagrepper_endpoint=None):
-        latest = session.query(self.model).order_by(
-            self.model.timestamp.desc()).first()
-        delta = 2000000
-        if latest:
-            latest.volume = 0
-            session.add(latest)
-            session.commit()
-            delta = int(
-                (datetime.datetime.now() - latest.timestamp).total_seconds())
-        resp = requests.get(
-            self.datagrepper_endpoint,
-            params={
-                'delta': delta,
-                'rows_per_page': 100,
-                'order': 'desc',
-            }
-        )
-        self.handle(session, resp.json().get('raw_messages', []))
 
 
 class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):

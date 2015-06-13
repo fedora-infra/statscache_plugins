@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import statscache.plugins
 
 import datetime
@@ -11,17 +12,17 @@ class Plugin(statscache.plugins.BasePlugin):
     description = """
     Latest build logs for successful upload/test of cloud images
     """
-    artifacts = ('appliance', 'livecd') 
+    artifacts = ('appliance', 'livecd')
 
     def __init__(self, *args, **kwargs):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         for message in messages:
-            if not (message['msg']['owner'] == 'masher' and
-                    message['msg']['method'] in self.artifacts):
+            if not (message['msg'].get('owner') == 'masher' and
+                    message['msg'].get('method') in self.artifacts):
                 continue
             artifact = message['msg']['method']
             srpm_name, srpm_link, arch = self.get_srpm_details(message['msg'])
@@ -79,8 +80,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 'user': 'masher'
             }
         )
-        rows = self.handle(session, datetime.datetime.now(),
-                           resp.json().get('raw_messages', []))
+        rows = self.handle(session, resp.json().get('raw_messages', []))
         session.add_all(rows)
         session.commit()
 
@@ -90,7 +90,7 @@ class Plugin(statscache.plugins.BasePlugin):
         info = msg.get('info')
         srpm = msg['srpm']
         if isinstance(info, dict):
-            options = info['request'][-1];
+            options = info['request'][-1]
             if options.get('format'):
                 srpm = '{} ({})'.format(
                     srpm, options['format'])

@@ -1,38 +1,63 @@
 import collections
+import datetime
 
 import statscache.plugins
+from statscache_plugins.volume.utils import VolumePluginMixin
 
 import fedmsg.meta
 import sqlalchemy as sa
 
 
-def make_model(period):
-    class Result(statscache.plugins.BaseModel):
-        __tablename__ = 'data_volume_by_package_%i' % period
-        timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
-        volume = sa.Column(sa.Integer, nullable=False)
-        package = sa.Column(sa.UnicodeText, nullable=False, index=True)
-
-    return Result
-
-
-class Plugin(statscache.plugins.BasePlugin):
+class PluginMixin(VolumePluginMixin):
     name = "volume, by package"
     summary = "the count of messages, organized by package"
     description = """
     For any given time window, the number of messages that come across
     the bus for each package.
     """
-    def handle(self, session, timestamp, messages):
+
+    def make_model(self):
+        class Result(statscache.plugins.BaseModel):
+            __tablename__ = 'data_volume_by_package_%s' % self.frequency
+            timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
+            volume = sa.Column(sa.Integer, nullable=False)
+            package = sa.Column(sa.UnicodeText, nullable=False, index=True)
+
+        return Result
+
+    def handle(self, session, messages):
         volumes = collections.defaultdict(int)
         for msg in messages:
+            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
             packages = fedmsg.meta.msg2packages(msg, **self.config)
             for package in packages:
-                volumes[package] += 1
+                volumes[
+                    (package, self.frequency.next(msg_timestamp))] += 1
 
-        for package, volume in volumes.items():
-            result = self.model(
-                timestamp=timestamp,
-                volume=len(messages),
-                package=package)
-            session.add(result)
+        for key, volume in volumes.items():
+            package, timestamp = key
+            result = session.query(self.model)\
+                .filter(self.model.package == package)\
+                .filter(self.model.timestamp == timestamp)
+            row = result.first()
+            if row:
+                row.volume += volume
+            else:
+                row = self.model(
+                    timestamp=timestamp,
+                    volume=volume,
+                    package=package)
+            session.add(row)
+        session.commit()
+
+
+class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1s')
+
+
+class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('5s')
+
+
+class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1m')

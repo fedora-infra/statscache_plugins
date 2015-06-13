@@ -1,13 +1,12 @@
+import collections
+import datetime
+
 import statscache.plugins
+import statscache.schedule
+from statscache_plugins.volume.utils import VolumePluginMixin
 
 
-def make_model(period):
-    class Result(statscache.plugins.ScalarModel):
-        __tablename__ = 'data_volume_%i' % period
-    return Result
-
-
-class Plugin(statscache.plugins.BasePlugin):
+class PluginMixin(VolumePluginMixin):
     name = "volume"
     summary = "the number of messages coming across the bus"
     description = """
@@ -17,6 +16,38 @@ class Plugin(statscache.plugins.BasePlugin):
     other statistics.
     """
 
-    def handle(self, session, timestamp, messages):
-        result = self.model(timestamp=timestamp, scalar=len(messages))
-        session.add(result)
+    def make_model(self):
+        class Result(statscache.plugins.ScalarModel):
+            __tablename__ = 'data_volume_%s' % self.frequency
+        return Result
+
+    def handle(self, session, messages):
+        volumes = collections.defaultdict(int)
+        for msg in messages:
+            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
+            volumes[msg_timestamp] += 1
+        for timestamp, volume in volumes.items():
+
+            result = session.query(self.model)\
+                .filter(self.model.timestamp == timestamp)
+            row = result.first()
+            if row:
+                row.scalar += volume
+            else:
+                row = self.model(
+                    timestamp=timestamp,
+                    scalar=volume)
+            session.add(row)
+        session.commit()
+
+
+class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1s')
+
+
+class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('5s')
+
+
+class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
+    frequency = statscache.schedule.Frequency('1m')
