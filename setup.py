@@ -11,7 +11,9 @@ requires = [
     'statscache',
 ]
 
-tests_require = [ ]
+tests_require = [
+    'nose'
+]
 
 setup(
     name='statscache_plugins',
