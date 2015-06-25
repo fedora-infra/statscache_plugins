@@ -16,13 +16,16 @@ class PluginMixin(VolumePluginMixin):
     """
 
     def make_model(self):
-        class Result(statscache.plugins.BaseModel):
-            __tablename__ = 'data_volume_by_topic_%s' % self.frequency
-            timestamp = sa.Column(sa.DateTime, nullable=False, index=True)
-            volume = sa.Column(sa.Integer, nullable=False)
-            topic = sa.Column(sa.UnicodeText, nullable=False, index=True)
+        freq = str(self.frequency)
 
-        return Result
+        return type('VolumeByTopic' + freq + 'Model',
+                    (statscache.plugins.BaseModel,),
+                    {
+                        '__tablename__': 'data_volume_by_topic_' + freq,
+                        'timestamp': sa.Column(sa.DateTime, nullable=False, index=True),
+                        'volume': sa.Column(sa.Integer, nullable=False),
+                        'topic': sa.Column(sa.UnicodeText, nullable=False, index=True),
+                    })
 
     def handle(self, session, messages):
         volumes = collections.defaultdict(int)

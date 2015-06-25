@@ -17,9 +17,13 @@ class PluginMixin(VolumePluginMixin):
     """
 
     def make_model(self):
-        class Result(statscache.plugins.ScalarModel):
-            __tablename__ = 'data_volume_%s' % self.frequency
-        return Result
+        freq = str(self.frequency)
+
+        return type('Volume' + freq + 'Model',
+                    (statscache.plugins.ScalarModel,),
+                    {
+                        '__tablename__': 'data_volume_' + freq,
+                    })
 
     def handle(self, session, messages):
         volumes = collections.defaultdict(int)
