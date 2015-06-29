@@ -29,6 +29,7 @@ class Plugin(statscache.plugins.BasePlugin):
 
     @property
     def layout(self):
+        # why not: layout = { ... }
         return {
             'groups': [
                 {
@@ -146,7 +147,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 except Exception as e:
                     log.exception(
                         "Error in releng plugin '{}': {}".format(
-                            plugin.idx, e), exc_info=True)
+                            plugin.ident, e), exc_info=True)
             # FIXME: need to write in a single db hit
             session.add_all(rows)
             session.commit()
@@ -164,12 +165,13 @@ class Plugin(statscache.plugins.BasePlugin):
             except Exception as e:
                 log.exception(
                     "Error during initializing releng plugin '{}': {}".format(
-                        plugin.idx, e), exc_info=True)
+                        plugin.ident, e), exc_info=True)
 
     def cleanup(self):
         pass
 
     def load_plugins(self, config, model):
+        # TODO: plugins for a plugin? This shoudln't be necessary
         if getattr(self, '_plugins', None):
             return self._plugins
         self._plugins = []
@@ -179,8 +181,8 @@ class Plugin(statscache.plugins.BasePlugin):
             module = importer.find_module(
                 package_name).load_module(full_package_name)
             plugin = getattr(module, 'Plugin', None)
-            if plugin and issubclass(
-                    plugin, statscache.plugins.BasePlugin):
+            if plugin and issubclass(plugin,
+                                    statscache.plugins.BasePlugin):
                 log.info("Loading plugin %r" % plugin)
                 self._plugins.append(plugin(config, model))
             else:
