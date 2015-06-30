@@ -62,3 +62,5 @@ class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
 
 class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
     frequency = statscache.schedule.Frequency('1m')
+
+plugins = [OneSecondFrequencyPlugin, FiveSecondFrequencyPlugin, OneMinuteFrequencyPlugin]
