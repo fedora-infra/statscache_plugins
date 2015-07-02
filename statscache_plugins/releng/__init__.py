@@ -14,6 +14,7 @@ class Plugin(statscache.plugins.BasePlugin):
     Recent release engineering event logs to be used for rendering
     release engineering dashboard.
     """
+    frequency = statscache.plugins.Frequency(minutes=5)
     datagrepper_endpoint = 'https://apps.fedoraproject.org/datagrepper/raw/'
 
     def __init__(self, config):

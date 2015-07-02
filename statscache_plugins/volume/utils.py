@@ -14,7 +14,7 @@ class VolumePluginMixin(object):
             session.commit()
             delta = int(
                 (datetime.datetime.now() -
-                 self.frequency.prev(latest.timestamp)).total_seconds()
+                 latest.timestamp - self.frequency).total_seconds()
             )
         resp = requests.get(
             self.datagrepper_endpoint,
