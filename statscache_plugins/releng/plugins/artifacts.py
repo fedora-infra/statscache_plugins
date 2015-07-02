@@ -18,7 +18,7 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, messages):
+    def handle(self, session, timestamp, messages):
         rows = []
         for message in messages:
             if not (message['msg'].get('owner') == 'masher' and
@@ -80,7 +80,7 @@ class Plugin(statscache.plugins.BasePlugin):
                 'user': 'masher'
             }
         )
-        rows = self.handle(session, resp.json().get('raw_messages', []))
+        rows = self.handle(session, latest.timestamp, resp.json().get('raw_messages', []))
         session.add_all(rows)
         session.commit()
 

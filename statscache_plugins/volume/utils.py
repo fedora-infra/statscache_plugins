@@ -23,4 +23,4 @@ class VolumePluginMixin(object):
                 'rows_per_page': 100
             }
         )
-        self.handle(session, resp.json().get('raw_messages', []))
+        self.handle(session, latest.timestamp, resp.json().get('raw_messages', []))

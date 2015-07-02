@@ -28,7 +28,7 @@ class PluginMixin(VolumePluginMixin):
                         'package': sa.Column(sa.UnicodeText, nullable=False, index=True),
                     })
 
-    def handle(self, session, messages):
+    def handle(self, session, timestamp, messages):
         volumes = collections.defaultdict(int)
         for msg in messages:
             msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
