@@ -35,7 +35,7 @@ class PluginMixin(VolumePluginMixin):
             packages = fedmsg.meta.msg2packages(msg, **self.config)
             for package in packages:
                 volumes[
-                    (package, self.frequency + msg_timestamp)] += 1
+                    (package, self.frequency.next(now=msg_timestamp))] += 1
 
         for key, volume in volumes.items():
             package, timestamp = key

@@ -34,7 +34,7 @@ class PluginMixin(VolumePluginMixin):
             msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
             users = fedmsg.meta.msg2usernames(msg, **self.config)
             for user in users:
-                volumes[(user, self.frequency + msg_timestamp)] += 1
+                volumes[(user, self.frequency.next(now=msg_timestamp))] += 1
 
         for key, volume in volumes.items():
             user, timestamp = key

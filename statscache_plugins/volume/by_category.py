@@ -33,7 +33,7 @@ class PluginMixin(VolumePluginMixin):
         for msg in messages:
             msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
             volumes[(msg['topic'].split('.')[3],
-                     self.frequency + msg_timestamp)] += 1
+                     self.frequency.next(now=msg_timestamp))] += 1
 
         for key, volume in volumes.items():
             category, timestamp = key
