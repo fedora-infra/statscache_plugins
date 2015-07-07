@@ -1,6 +1,7 @@
 import logging
 import os.path
 import pkgutil
+import datetime
 
 import statscache.plugins
 
@@ -14,13 +15,13 @@ class Plugin(statscache.plugins.BasePlugin):
     Recent release engineering event logs to be used for rendering
     release engineering dashboard.
     """
-    frequency = statscache.plugins.Frequency(minutes=5)
+    interval = datetime.timedelta(minutes=5)
     datagrepper_endpoint = 'https://apps.fedoraproject.org/datagrepper/raw/'
 
-    def __init__(self, config):
-        super(Plugin, self).__init__(config)
+    def __init__(self, frequency, config):
+        super(Plugin, self).__init__(frequency, config)
         self._plugins = None
-        self._plugins = self.load_plugins(config, self.model)
+        self._plugins = self.load_plugins()
 
     def make_model(self):
         class Result(statscache.plugins.ConstrainedCategorizedLogModel):
@@ -171,7 +172,7 @@ class Plugin(statscache.plugins.BasePlugin):
     def cleanup(self):
         pass
 
-    def load_plugins(self, config, model):
+    def load_plugins(self):
         # TODO: plugins for a plugin? This shoudln't be necessary
         if getattr(self, '_plugins', None):
             return self._plugins
@@ -185,7 +186,8 @@ class Plugin(statscache.plugins.BasePlugin):
             if plugin and issubclass(plugin,
                                     statscache.plugins.BasePlugin):
                 log.info("Loading plugin %r" % plugin)
-                self._plugins.append(plugin(config, model))
+                self._plugins.append(plugin(self.frequency, self.config,
+                                            model=self.model))
             else:
                 log.info("Not loading %r.  Not a plugin." % plugin)
         return self._plugins
