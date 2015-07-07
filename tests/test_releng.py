@@ -1,4 +1,6 @@
 import unittest
+import datetime
+import statscache.frequency
 import statscache.plugins
 import statscache_plugins.releng
 
@@ -18,6 +20,12 @@ class TestRelengPlugin(unittest.TestCase):
         return statscache.plugins.init_model(uri)
 
     def test_init(self):
-        plugin = statscache_plugins.releng.Plugin(self.config)
+        frequency = statscache.frequency.Frequency(
+            statscache_plugins.releng.Plugin.interval,
+            datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0))
+        plugin = statscache_plugins.releng.Plugin(frequency, self.config)
         session = self._make_session()
         plugin.initialize(session)
+
+if __name__ == '__main__':
+    unittest.main()

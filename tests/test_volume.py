@@ -1,4 +1,6 @@
 import unittest
+import datetime
+import statscache.frequency
 import statscache.plugins
 import statscache_plugins.volume.by_category
 from sqlalchemy import create_engine
@@ -19,7 +21,11 @@ class TestVolumePlugin(unittest.TestCase):
         return statscache.plugins.init_model(uri)
 
     def test_init(self):
-        plugin = statscache_plugins.volume.by_category.OneMinuteFrequencyPlugin(self.config)
+        frequency = statscache.frequency.Frequency(
+            statscache_plugins.volume.by_category.OneMinuteFrequencyPlugin.interval,
+            datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0))
+        plugin = statscache_plugins.volume.by_category.OneMinuteFrequencyPlugin(frequency,
+                                                                                self.config)
         session = self._make_session()
         plugin.initialize(session)
 
