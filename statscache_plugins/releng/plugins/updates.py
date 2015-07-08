@@ -24,7 +24,7 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, messages):
+    def handle(self, session, timestamp, messages):
         log.info("In handle with %i messages" % len(messages))
         for message in messages:
             if not message['topic'] in self.topics:
@@ -87,5 +87,5 @@ class Plugin(statscache.plugins.BasePlugin):
                 }
             )
             messages = resp.json().get('raw_messages', [])
-            self.handle(session, messages)
+            self.handle(session, latest.timestamp, messages)
             session.commit()

@@ -14,7 +14,7 @@ class VolumePluginMixin(object):
             session.commit()
             delta = int(
                 (datetime.datetime.now() -
-                 self.frequency.prev(latest.timestamp)).total_seconds()
+                 self.frequency.last(now=latest.timestamp)).total_seconds()
             )
         resp = requests.get(
             self.datagrepper_endpoint,
@@ -23,4 +23,4 @@ class VolumePluginMixin(object):
                 'rows_per_page': 100
             }
         )
-        self.handle(session, resp.json().get('raw_messages', []))
+        self.handle(session, latest.timestamp, resp.json().get('raw_messages', []))
