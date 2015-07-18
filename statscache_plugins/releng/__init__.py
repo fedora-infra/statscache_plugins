@@ -140,12 +140,12 @@ class Plugin(statscache.plugins.BasePlugin):
             }
         }
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         try:
             for plugin in self._plugins:
                 try:
-                    rows.extend(plugin.handle(session, timestamp, messages) or [])
+                    rows.extend(plugin.handle(session, messages) or [])
                 except Exception as e:
                     log.exception(
                         "Error in releng plugin '{}': {}".format(

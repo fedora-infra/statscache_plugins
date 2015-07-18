@@ -18,7 +18,7 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         rows = []
         for message in messages:
             if not (message['msg'].get('owner') == 'masher' and

@@ -24,7 +24,7 @@ class Plugin(statscache.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         log.info("In handle with %i messages" % len(messages))
         for message in messages:
             if not message['topic'] in self.topics:

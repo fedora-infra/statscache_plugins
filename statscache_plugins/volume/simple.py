@@ -24,7 +24,7 @@ class PluginMixin(VolumePluginMixin):
                         '__tablename__': 'data_volume_' + freq,
                     })
 
-    def handle(self, session, timestamp, messages):
+    def handle(self, session, messages):
         volumes = collections.defaultdict(int)
         for msg in messages:
             msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
