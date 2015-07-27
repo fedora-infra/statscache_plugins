@@ -2,7 +2,6 @@ import collections
 import datetime
 
 import statscache.plugins
-import statscache.schedule
 from statscache_plugins.volume.utils import VolumePluginMixin
 
 
@@ -46,12 +45,14 @@ class PluginMixin(VolumePluginMixin):
 
 
 class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('1s')
+    interval = datetime.timedelta(seconds=1)
 
 
 class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('5s')
+    interval = datetime.timedelta(seconds=5)
 
 
 class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('1m')
+    interval = datetime.timedelta(minutes=1)
+
+plugins = [OneSecondFrequencyPlugin, FiveSecondFrequencyPlugin, OneMinuteFrequencyPlugin]

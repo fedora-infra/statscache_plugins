@@ -35,7 +35,7 @@ class PluginMixin(VolumePluginMixin):
             packages = fedmsg.meta.msg2packages(msg, **self.config)
             for package in packages:
                 volumes[
-                    (package, self.frequency.next(msg_timestamp))] += 1
+                    (package, self.frequency.next(now=msg_timestamp))] += 1
 
         for key, volume in volumes.items():
             package, timestamp = key
@@ -55,12 +55,14 @@ class PluginMixin(VolumePluginMixin):
 
 
 class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('1s')
+    interval = datetime.timedelta(seconds=1)
 
 
 class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('5s')
+    interval = datetime.timedelta(seconds=5)
 
 
 class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    frequency = statscache.schedule.Frequency('1m')
+    interval = datetime.timedelta(minutes=1)
+
+plugins = [OneSecondFrequencyPlugin, FiveSecondFrequencyPlugin, OneMinuteFrequencyPlugin]
