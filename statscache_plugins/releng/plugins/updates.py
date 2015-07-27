@@ -87,5 +87,5 @@ class Plugin(statscache.plugins.BasePlugin):
                 }
             )
             messages = resp.json().get('raw_messages', [])
-            self.handle(session, latest.timestamp, messages)
+            self.handle(session, messages)
             session.commit()
