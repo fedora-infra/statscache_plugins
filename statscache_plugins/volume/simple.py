@@ -1,8 +1,7 @@
 import collections
 import datetime
 
-import statscache.plugins
-from statscache_plugins.volume.utils import VolumePluginMixin
+from statscache_plugins.volume.utils import VolumePluginMixin, plugin_factory
 
 
 class PluginMixin(VolumePluginMixin):
@@ -14,15 +13,6 @@ class PluginMixin(VolumePluginMixin):
     It can give you a baseline quantity against which you could normalize
     other statistics.
     """
-
-    def make_model(self):
-        freq = str(self.frequency)
-
-        return type('Volume' + freq + 'Model',
-                    (statscache.plugins.ScalarModel,),
-                    {
-                        '__tablename__': 'data_volume_' + freq,
-                    })
 
     def handle(self, session, messages):
         volumes = collections.defaultdict(int)
@@ -44,15 +34,9 @@ class PluginMixin(VolumePluginMixin):
         session.commit()
 
 
-class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(seconds=1)
-
-
-class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(seconds=5)
-
-
-class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(minutes=1)
-
-plugins = [OneSecondFrequencyPlugin, FiveSecondFrequencyPlugin, OneMinuteFrequencyPlugin]
+plugins = plugin_factory(
+    [datetime.timedelta(seconds=s) for s in [1, 5, 60]],
+    PluginMixin,
+    "Volume",
+    "data_volume_"
+)
