@@ -1,11 +1,16 @@
 import datetime
 import requests
+import collections
 import copy
 from statscache.frequency import Frequency
 from statscache.plugins import BasePlugin, BaseModel, ScalarModel
 
 
 class VolumePluginMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        super(VolumePluginMixin, self).__init__(*args, **kwargs)
+        self._volumes = collections.defaultdict(int)
 
     def initialize(self, session, datagrepper_endpoint=None):
         latest = session.query(self.model).order_by(
@@ -26,22 +31,24 @@ class VolumePluginMixin(object):
                 'rows_per_page': 100
             }
         )
-        self.handle(session, resp.json().get('raw_messages', []))
+        map(self.process, resp.json().get('raw_messages', []))
+        self.update(session)
 
 
-def plugin_factory(intervals, plugin_mixin_class, class_prefix, table_prefix,
+def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
                    columns=None):
     for interval in intervals:
         s = str(Frequency(interval)) # pretty-print timedelta
-        class PluginAnon(plugin_mixin_class, BasePlugin):
-            pass
-        PluginAnon.__name__ = s.join([class_prefix, "Plugin"])
-        PluginAnon.interval = interval
-        modelAttributes = { '__tablename__': table_prefix + s }
-        modelAttributes.update(copy.deepcopy(columns or {}))
-        PluginAnon.model = type(
+        plugin = type(
+            s.join([class_prefix, "Plugin"]),
+            (mixin_class, BasePlugin),
+            { 'interval': interval }
+        )
+        attributes = { '__tablename__': table_prefix + s }
+        attributes.update(copy.deepcopy(columns or {}))
+        plugin.model = type(
             s.join([class_prefix, "Model"]),
             (BaseModel if columns is not None else ScalarModel,),
-            modelAttributes
+            attributes
         )
-        yield PluginAnon
+        yield plugin

@@ -29,50 +29,56 @@ class Plugin(statscache.plugins.BasePlugin):
     def __init__(self, *args, **kwargs):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
+        self._queue = {}
 
-    def handle(self, session, messages):
-        rows = []
-        for message in messages:
-            m = self.p.match(message['topic'])
-            if m is None:
-                continue
-            topic, status = m.groups()
-            if topic not in self.topics:
-                continue
-            tokens = topic.split('.')
-            # agent = (len(tokens) == 6 and tokens[-1]) or 'compose'
-            arch = message['msg'].get('arch') or 'primary'
-            branch = tokens[4]
-            name = tokens[-1]
-            category = 'compose-{}_{}'.format(branch, arch)
-            category_constraint = name
-            msg = json.dumps({
-                'name': name.title(),
-                'status': status,
-            })
-            msg_timestamp = datetime.datetime.fromtimestamp(
-                message['timestamp'])
-            last_seen_key = '{}:{}'.format(category, category_constraint)
-            last_seen = self._seen.get(last_seen_key)
-            if last_seen and msg_timestamp <= last_seen:
-                continue
-            self._seen[last_seen_key] = msg_timestamp
+    def process(self, message):
+        m = self.p.match(message['topic'])
+        if m is None:
+            return
+        topic, status = m.groups()
+        if topic not in self.topics:
+            return
+        tokens = topic.split('.')
+        # agent = (len(tokens) == 6 and tokens[-1]) or 'compose'
+        arch = message['msg'].get('arch') or 'primary'
+        branch = tokens[4]
+        name = tokens[-1]
+        category = 'compose-{}_{}'.format(branch, arch)
+        category_constraint = name
+        timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
+
+        # check if this message already is out-of-date
+        last_seen = self._seen.get((category, category_constraint))
+        if last_seen and timestamp <= last_seen:
+            return
+        self._seen[(category, category_constraint)] = timestamp
+
+        msg = json.dumps({
+            'name': name.title(),
+            'status': status,
+        })
+        self._queue[(category, category_constraint)] = (timestamp, msg)
+
+    def update(self, session):
+        for ((category, category_constraint),
+             (timestamp, message)) in self._queue.items():
             result = session.query(self.model)\
                 .filter(self.model.category == category)\
                 .filter(self.model.category_constraint == category_constraint)
             row = result.first()
             if row:
-                row.timestamp = msg_timestamp
-                row.message = msg
+                row.timestamp = timestamp
+                row.message = message
             else:
                 row = self.model(
-                    timestamp=msg_timestamp,
-                    message=msg,
+                    timestamp=timestamp,
+                    message=message,
                     category=category,
                     category_constraint=category_constraint
                 )
-            rows.append(row)
-        return rows
+            session.add(row)
+        session.commit()
+        self._queue.clear()
 
     def initialize(self, session, datagrepper_endpoint=None):
         latest = session.query(self.model).filter(
@@ -94,6 +100,5 @@ class Plugin(statscache.plugins.BasePlugin):
                 datagrepper_endpoint,
                 params=params
             )
-            rows = self.handle(session, resp.json().get('raw_messages', []))
-            session.add_all(rows)
-            session.commit()
+            map(self.process, resp.json().get('raw_messages', []))
+            self.update(session)

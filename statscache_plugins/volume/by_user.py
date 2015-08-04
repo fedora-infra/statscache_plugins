@@ -1,4 +1,3 @@
-import collections
 import datetime
 
 from statscache_plugins.volume.utils import VolumePluginMixin, plugin_factory
@@ -15,15 +14,16 @@ class PluginMixin(VolumePluginMixin):
     the bus for each user.
     """
 
-    def handle(self, session, messages):
-        volumes = collections.defaultdict(int)
-        for msg in messages:
-            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
-            users = fedmsg.meta.msg2usernames(msg, **self.config)
-            for user in users:
-                volumes[(user, self.frequency.next(now=msg_timestamp))] += 1
+    def process(self, message):
+        timestamp = self.frequency.next(
+            now=datetime.datetime.fromtimestamp(message['timestamp'])
+        )
+        users = fedmsg.meta.msg2usernames(message, **self.config)
+        for user in users:
+            self._volumes[(user, timestamp)] += 1
 
-        for key, volume in volumes.items():
+    def update(self, session):
+        for key, volume in self._volumes.items():
             user, timestamp = key
             result = session.query(self.model)\
                 .filter(self.model.user == user)\
@@ -38,6 +38,7 @@ class PluginMixin(VolumePluginMixin):
                     user=user)
             session.add(row)
         session.commit()
+        self._volumes.clear()
 
 
 plugins = plugin_factory(

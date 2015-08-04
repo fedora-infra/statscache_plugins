@@ -17,50 +17,56 @@ class Plugin(statscache.plugins.BasePlugin):
     def __init__(self, *args, **kwargs):
         super(Plugin, self).__init__(*args, **kwargs)
         self._seen = {}
+        self._queue = {}
 
-    def handle(self, session, messages):
-        rows = []
-        for message in messages:
-            if not (message['msg'].get('owner') == 'masher' and
-                    message['msg'].get('method') in self.artifacts):
-                continue
-            artifact = message['msg']['method']
-            srpm_name, srpm_link, arch = self.get_srpm_details(message['msg'])
-            # FIXME: Have to include logic for overwriting older log
-            name = srpm_name
-            link = srpm_link if artifact == 'livecd' else None
-            category = 'artifact-{}_{}'.format(artifact, arch)
-            category_constraint = srpm_name
-            msg_timestamp = datetime.datetime.fromtimestamp(
-                message['timestamp'])
-            last_seen_key = '{}:{}'.format(category, category_constraint)
-            last_seen = self._seen.get(last_seen_key)
-            if last_seen and msg_timestamp <= last_seen:
-                continue
-            self._seen[last_seen_key] = msg_timestamp
-            msg = json.dumps({
-                'name': name,
-                'link': link,
-                'status': message['msg']['new'],
-                'extra_text': '(details)',
-                'extra_link': message['meta']['link']
-            })
+    def process(self, message):
+        if not (message['msg'].get('owner') == 'masher' and
+                message['msg'].get('method') in self.artifacts):
+            return
+        artifact = message['msg']['method']
+        srpm_name, srpm_link, arch = self.get_srpm_details(message['msg'])
+        # FIXME: Have to include logic for overwriting older log
+        name = srpm_name
+        link = srpm_link if artifact == 'livecd' else None
+        category = 'artifact-{}_{}'.format(artifact, arch)
+        category_constraint = srpm_name
+        timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
+
+        # check if this message already is out-of-date
+        last_seen = self._seen.get((category, category_constraint))
+        if last_seen and timestamp <= last_seen:
+            return
+        self._seen[(category, category_constraint)] = timestamp
+
+        msg = json.dumps({
+            'name': name,
+            'link': link,
+            'status': message['msg']['new'],
+            'extra_text': '(details)',
+            'extra_link': message['meta']['link']
+        })
+        self._queue[(category, category_constraint)] = (timestamp, msg)
+
+    def update(self, session):
+        for ((category, category_constraint),
+             (timestamp, message)) in self._queue.items():
             result = session.query(self.model)\
                 .filter(self.model.category == category)\
                 .filter(self.model.category_constraint == category_constraint)
             row = result.first()
             if row:
-                row.timestamp = msg_timestamp
-                row.message = msg
+                row.timestamp = timestamp
+                row.message = message
             else:
                 row = self.model(
-                    timestamp=msg_timestamp,
-                    message=msg,
+                    timestamp=timestamp,
+                    message=message,
                     category=category,
                     category_constraint=category_constraint
                 )
-            rows.append(row)
-        return rows
+            session.add(row)
+        session.commit()
+        self._queue.clear()
 
     def initialize(self, session, datagrepper_endpoint=None):
         latest = session.query(self.model).filter(
@@ -80,9 +86,8 @@ class Plugin(statscache.plugins.BasePlugin):
                 'user': 'masher'
             }
         )
-        rows = self.handle(session, resp.json().get('raw_messages', []))
-        session.add_all(rows)
-        session.commit()
+        map(self.process, resp.json().get('raw_messages', []))
+        self.update(session)
 
     def get_srpm_details(self, msg):
         tokens = msg['srpm'].split('-')

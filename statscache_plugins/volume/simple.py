@@ -1,4 +1,3 @@
-import collections
 import datetime
 
 from statscache_plugins.volume.utils import VolumePluginMixin, plugin_factory
@@ -14,13 +13,12 @@ class PluginMixin(VolumePluginMixin):
     other statistics.
     """
 
-    def handle(self, session, messages):
-        volumes = collections.defaultdict(int)
-        for msg in messages:
-            msg_timestamp = datetime.datetime.fromtimestamp(msg['timestamp'])
-            volumes[msg_timestamp] += 1
-        for timestamp, volume in volumes.items():
+    def process(self, message):
+        timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
+        self._volumes[timestamp] += 1
 
+    def update(self, session):
+        for timestamp, volume in self._volumes.items():
             result = session.query(self.model)\
                 .filter(self.model.timestamp == timestamp)
             row = result.first()
@@ -32,6 +30,7 @@ class PluginMixin(VolumePluginMixin):
                     scalar=volume)
             session.add(row)
         session.commit()
+        self._volumes.clear()
 
 
 plugins = plugin_factory(
