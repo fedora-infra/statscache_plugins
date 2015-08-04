@@ -3,7 +3,6 @@ import statscache.plugins
 
 import datetime
 import json
-import requests
 
 
 class Plugin(statscache.plugins.BasePlugin):
@@ -67,27 +66,6 @@ class Plugin(statscache.plugins.BasePlugin):
             session.add(row)
         session.commit()
         self._queue.clear()
-
-    def initialize(self, session, datagrepper_endpoint=None):
-        latest = session.query(self.model).filter(
-            self.model.category.startswith('artifact-')).order_by(
-                self.model.timestamp.desc()).first()
-        delta = 2000000
-        if latest:
-            delta = int(
-                (datetime.datetime.now() - latest.timestamp).total_seconds())
-        resp = requests.get(
-            datagrepper_endpoint,
-            params={
-                'delta': delta,
-                'rows_per_page': 100,
-                'order': 'desc',
-                'meta': 'link',
-                'user': 'masher'
-            }
-        )
-        map(self.process, resp.json().get('raw_messages', []))
-        self.update(session)
 
     def get_srpm_details(self, msg):
         tokens = msg['srpm'].split('-')

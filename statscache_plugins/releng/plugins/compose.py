@@ -79,26 +79,3 @@ class Plugin(statscache.plugins.BasePlugin):
             session.add(row)
         session.commit()
         self._queue.clear()
-
-    def initialize(self, session, datagrepper_endpoint=None):
-        latest = session.query(self.model).filter(
-            self.model.category.startswith('compose-')).order_by(
-                self.model.timestamp.desc()).first()
-        delta = 2000000
-        if latest:
-            delta = int(
-                (datetime.datetime.now() - latest.timestamp).total_seconds())
-        for topic in self.topics:
-            params = {
-                'delta': delta,
-                'rows_per_page': 100,
-                'order': 'desc',
-                'topic': ['{}.start'.format(topic),
-                          '{}.complete'.format(topic)]
-            }
-            resp = requests.get(
-                datagrepper_endpoint,
-                params=params
-            )
-            map(self.process, resp.json().get('raw_messages', []))
-            self.update(session)

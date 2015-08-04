@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 import datetime
 import json
-import requests
 
 import statscache.plugins
 
@@ -71,25 +70,3 @@ class Plugin(statscache.plugins.BasePlugin):
             session.add(row)
         session.commit()
         self._queue.clear()
-        # let the main plugin commit the transaction
-
-    def initialize(self, session, datagrepper_endpoint=None):
-        latest = session.query(self.model).filter(
-            self.model.category.startswith('updates-')).order_by(
-                self.model.timestamp.desc()).first()
-        delta = 31536000
-        if latest:
-            delta = datetime.datetime.now() - latest.timestamp
-            delta = int(delta.total_seconds())
-        for topic in self.topics:
-            resp = requests.get(
-                datagrepper_endpoint,
-                params={
-                    'delta': delta,
-                    'rows_per_page': 100,
-                    'order': 'desc',
-                    'topic': topic,
-                }
-            )
-            map(self.process, resp.json().get('raw_messages', []))
-            self.update(session)
