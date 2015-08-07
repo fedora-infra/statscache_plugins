@@ -14,7 +14,7 @@ class PluginMixin(VolumePluginMixin):
     """
 
     def process(self, message):
-        timestamp = self.frequency.next(
+        timestamp = self.schedule.next(
             now=datetime.datetime.fromtimestamp(msg['timestamp'])
         )
         self._volumes[(msg['topic'], timestamp)] += 1

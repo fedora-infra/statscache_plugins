@@ -16,8 +16,8 @@ class Plugin(statscache.plugins.BasePlugin):
     release engineering dashboard.
     """
 
-    def __init__(self, frequency, config):
-        super(Plugin, self).__init__(frequency, config)
+    def __init__(self, *args, **kwargs):
+        super(Plugin, self).__init__(*args, **kwargs)
         self._plugins = self.load_plugins()
 
     class Model(statscache.plugins.ConstrainedCategorizedLogModel):
@@ -182,7 +182,7 @@ class Plugin(statscache.plugins.BasePlugin):
             if plugin and issubclass(plugin,
                                     statscache.plugins.BasePlugin):
                 log.info("Loading plugin %r" % plugin)
-                self._plugins.append(plugin(self.frequency, self.config,
+                self._plugins.append(plugin(self.schedule, self.config,
                                             model=self.model))
             else:
                 log.info("Not loading %r.  Not a plugin." % plugin)

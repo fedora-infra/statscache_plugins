@@ -15,7 +15,7 @@ class PluginMixin(VolumePluginMixin):
     """
 
     def process(self, message):
-        timestamp = self.frequency.next(
+        timestamp = self.schedule.next(
             now=datetime.datetime.fromtimestamp(message['timestamp'])
         )
         users = fedmsg.meta.msg2usernames(message, **self.config)

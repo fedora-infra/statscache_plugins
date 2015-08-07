@@ -15,7 +15,7 @@ class PluginMixin(VolumePluginMixin):
     """
 
     def process(self, message):
-        timestamp = self.frequency.next(
+        timestamp = self.schedule.next(
             now=datetime.datetime.fromtimestamp(message['timestamp'])
         )
         packages = fedmsg.meta.msg2packages(message, **self.config)

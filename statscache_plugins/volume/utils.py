@@ -1,6 +1,7 @@
 import copy
+import datetime
 import collections
-from statscache.frequency import Frequency
+from statscache.schedule import Schedule
 from statscache.plugins import BasePlugin, BaseModel, ScalarModel
 
 
@@ -14,17 +15,17 @@ class VolumePluginMixin(object):
 def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
                    columns=None):
     for interval in intervals:
-        # Use a dummy Frequency for pretty-printing (epoch doesn't matter)
-        s = str(Frequency(interval, datetime.datetime.now()))
+        # Use a dummy Schedule for pretty-printing (epoch doesn't matter)
+        sched = str(Schedule(interval, datetime.datetime.now()))
         plugin = type(
-            s.join([class_prefix, "Plugin"]),
+            sched.join([class_prefix, "Plugin"]),
             (mixin_class, BasePlugin),
             { 'interval': interval }
         )
-        attributes = { '__tablename__': table_prefix + s }
+        attributes = { '__tablename__': table_prefix + sched }
         attributes.update(copy.deepcopy(columns or {}))
         plugin.model = type(
-            s.join([class_prefix, "Model"]),
+            sched.join([class_prefix, "Model"]),
             (BaseModel if columns is not None else ScalarModel,),
             attributes
         )
