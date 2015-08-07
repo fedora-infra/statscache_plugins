@@ -23,11 +23,10 @@ class Plugin(statscache.plugins.BasePlugin):
         self._plugins = None
         self._plugins = self.load_plugins()
 
-    def make_model(self):
-        class Result(statscache.plugins.ConstrainedCategorizedLogModel):
+    class Model(statscache.plugins.ConstrainedCategorizedLogModel):
             __tablename__ = 'data_releng_dashboard'
 
-        return Result
+    model = Model
 
     @property
     def layout(self):

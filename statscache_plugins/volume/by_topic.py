@@ -1,8 +1,7 @@
 import collections
 import datetime
 
-import statscache.plugins
-from statscache_plugins.volume.utils import VolumePluginMixin
+from statscache_plugins.volume.utils import VolumePluginMixin, plugin_factory
 
 import sqlalchemy as sa
 
@@ -14,18 +13,6 @@ class PluginMixin(VolumePluginMixin):
     For any given time window, the number of messages that come across
     the bus for each topic.
     """
-
-    def make_model(self):
-        freq = str(self.frequency)
-
-        return type('VolumeByTopic' + freq + 'Model',
-                    (statscache.plugins.BaseModel,),
-                    {
-                        '__tablename__': 'data_volume_by_topic_' + freq,
-                        'timestamp': sa.Column(sa.DateTime, nullable=False, index=True),
-                        'volume': sa.Column(sa.Integer, nullable=False),
-                        'topic': sa.Column(sa.UnicodeText, nullable=False, index=True),
-                    })
 
     def handle(self, session, messages):
         volumes = collections.defaultdict(int)
@@ -51,15 +38,13 @@ class PluginMixin(VolumePluginMixin):
         session.commit()
 
 
-class OneSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(seconds=1)
-
-
-class FiveSecondFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(seconds=5)
-
-
-class OneMinuteFrequencyPlugin(PluginMixin, statscache.plugins.BasePlugin):
-    interval = datetime.timedelta(minutes=1)
-
-plugins = [OneSecondFrequencyPlugin, FiveSecondFrequencyPlugin, OneMinuteFrequencyPlugin]
+plugins = plugin_factory(
+    [datetime.timedelta(seconds=s) for s in [1, 5, 60]],
+    PluginMixin,
+    "VolumeByTopic",
+    "data_volume_by_topic_",
+    columns={
+        'volume': sa.Column(sa.Integer, nullable=False),
+        'topic': sa.Column(sa.UnicodeText, nullable=False, index=True),
+    }
+)
