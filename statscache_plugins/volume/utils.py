@@ -14,7 +14,8 @@ class VolumePluginMixin(object):
 def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
                    columns=None):
     for interval in intervals:
-        s = str(Frequency(interval)) # pretty-print timedelta
+        # Use a dummy Frequency for pretty-printing (epoch doesn't matter)
+        s = str(Frequency(interval, datetime.datetime.now()))
         plugin = type(
             s.join([class_prefix, "Plugin"]),
             (mixin_class, BasePlugin),
