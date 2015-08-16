@@ -19,15 +19,16 @@ class PluginMixin(VolumePluginMixin):
 
     def update(self, session):
         for timestamp, volume in self._volumes.items():
-            result = session.query(self.model)\
-                .filter(self.model.timestamp == timestamp)
-            row = result.first()
+            row = session.query(self.model)\
+                .filter(self.model.timestamp == timestamp)\
+                .first()
             if row:
                 row.scalar += volume
             else:
                 row = self.model(
                     timestamp=timestamp,
-                    scalar=volume)
+                    scalar=volume
+                )
             session.add(row)
         session.commit()
         self._volumes.clear()
