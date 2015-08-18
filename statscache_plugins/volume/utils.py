@@ -6,14 +6,35 @@ from statscache.plugins import BasePlugin, BaseModel, ScalarModel
 
 
 class VolumePluginMixin(object):
+    """
+    Consolidates common logic among the various volume plugins, which need
+    to define a list of strings '_keys' which must correspond to the names of
+    the columns by which volume is being tracked. The order that they are given
+    must also match the order that the values are provided in the tuple keys to
+    the '_volumes' defaultdict.
+    """
 
     def __init__(self, *args, **kwargs):
         super(VolumePluginMixin, self).__init__(*args, **kwargs)
         self._volumes = collections.defaultdict(int)
 
+    def update(self, session):
+        for key, volume in self._volumes.items():
+            keys_to_values = dict(zip(self._keys, list(key)))
+            row = session.query(self.model)\
+                .filter_by(**keys_to_values)\
+                .first()
+            if row:
+                row.volume += volume
+            else:
+                row = self.model(volume=volume, **keys_to_values)
+            session.add(row)
+        session.commit()
+        self._volumes.clear()
+
 
 def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
-                   columns=None):
+                   columns):
     for interval in intervals:
         # Use a dummy Schedule for pretty-printing (epoch doesn't matter)
         sched = str(Schedule(interval, datetime.datetime.now()))
@@ -26,7 +47,7 @@ def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
         attributes.update(copy.deepcopy(columns or {}))
         plugin.model = type(
             sched.join([class_prefix, "Model"]),
-            (BaseModel if columns is not None else ScalarModel,),
+            (BaseModel,),
             attributes
         )
         yield plugin

@@ -12,31 +12,19 @@ class PluginMixin(VolumePluginMixin):
     It can give you a baseline quantity against which you could normalize
     other statistics.
     """
+    _keys = ['timestamp']
 
     def process(self, message):
         timestamp = datetime.datetime.fromtimestamp(message['timestamp'])
-        self._volumes[timestamp] += 1
-
-    def update(self, session):
-        for timestamp, volume in self._volumes.items():
-            row = session.query(self.model)\
-                .filter(self.model.timestamp == timestamp)\
-                .first()
-            if row:
-                row.scalar += volume
-            else:
-                row = self.model(
-                    timestamp=timestamp,
-                    scalar=volume
-                )
-            session.add(row)
-        session.commit()
-        self._volumes.clear()
+        self._volumes[(timestamp,)] += 1
 
 
 plugins = plugin_factory(
     [datetime.timedelta(seconds=s) for s in [1, 5, 60]],
     PluginMixin,
     "Volume",
-    "data_volume_"
+    "data_volume_",
+    {
+        'volume': sa.Column(sa.Integer, nullable=False),
+    }
 )

@@ -13,6 +13,7 @@ class PluginMixin(VolumePluginMixin):
     For any given time window, the number of messages that come across
     the bus for each package.
     """
+    _keys = ['package', 'timestamp']
 
     def process(self, message):
         timestamp = self.schedule.next(
@@ -22,32 +23,13 @@ class PluginMixin(VolumePluginMixin):
         for package in packages:
             self._volumes[(package, timestamp)] += 1
 
-    def update(self, session):
-        for key, volume in self._volumes.items():
-            package, timestamp = key
-            row = session.query(self.model)\
-                .filter(self.model.package == package)\
-                .filter(self.model.timestamp == timestamp)\
-                .first()
-            if row:
-                row.volume += volume
-            else:
-                row = self.model(
-                    timestamp=timestamp,
-                    volume=volume,
-                    package=package
-                )
-            session.add(row)
-        session.commit()
-        self._volumes.clear()
-
 
 plugins = plugin_factory(
     [datetime.timedelta(seconds=s) for s in [1, 5, 60]],
     PluginMixin,
     "VolumeByPackage",
     "data_volume_by_package_",
-    columns={
+    {
         'volume': sa.Column(sa.Integer, nullable=False),
         'package': sa.Column(sa.UnicodeText, nullable=False, index=True),
     }
