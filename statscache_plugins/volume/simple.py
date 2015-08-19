@@ -2,6 +2,8 @@ import datetime
 
 from statscache_plugins.volume.utils import VolumePluginMixin, plugin_factory
 
+import sqlalchemy as sa
+
 
 class PluginMixin(VolumePluginMixin):
     name = "volume"
