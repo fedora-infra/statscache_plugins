@@ -1,47 +1,53 @@
-import datetime
-import requests
 import copy
-from statscache.frequency import Frequency
+import datetime
+import collections
+from statscache.schedule import Schedule
 from statscache.plugins import BasePlugin, BaseModel, ScalarModel
 
 
 class VolumePluginMixin(object):
+    """
+    Consolidates common logic among the various volume plugins, which need
+    to define a list of strings '_keys' which must correspond to the names of
+    the columns by which volume is being tracked. The order that they are given
+    must also match the order that the values are provided in the tuple keys to
+    the '_volumes' defaultdict.
+    """
 
-    def initialize(self, session, datagrepper_endpoint=None):
-        latest = session.query(self.model).order_by(
-            self.model.timestamp.desc()).first()
-        delta = 2000000
-        if latest:
-            latest.volume = 0
-            session.add(latest)
-            session.commit()
-            delta = int(
-                (datetime.datetime.now() -
-                 self.frequency.last(now=latest.timestamp)).total_seconds()
-            )
-        resp = requests.get(
-            self.datagrepper_endpoint,
-            params={
-                'delta': delta,
-                'rows_per_page': 100
-            }
-        )
-        self.handle(session, resp.json().get('raw_messages', []))
+    def __init__(self, *args, **kwargs):
+        super(VolumePluginMixin, self).__init__(*args, **kwargs)
+        self._volumes = collections.defaultdict(int)
+
+    def update(self, session):
+        for key, volume in self._volumes.items():
+            keys_to_values = dict(zip(self._keys, list(key)))
+            row = session.query(self.model)\
+                .filter_by(**keys_to_values)\
+                .first()
+            if row:
+                row.volume += volume
+            else:
+                row = self.model(volume=volume, **keys_to_values)
+            session.add(row)
+        session.commit()
+        self._volumes.clear()
 
 
-def plugin_factory(intervals, plugin_mixin_class, class_prefix, table_prefix,
-                   columns=None):
+def plugin_factory(intervals, mixin_class, class_prefix, table_prefix,
+                   columns):
     for interval in intervals:
-        s = str(Frequency(interval)) # pretty-print timedelta
-        class PluginAnon(plugin_mixin_class, BasePlugin):
-            pass
-        PluginAnon.__name__ = s.join([class_prefix, "Plugin"])
-        PluginAnon.interval = interval
-        modelAttributes = { '__tablename__': table_prefix + s }
-        modelAttributes.update(copy.deepcopy(columns or {}))
-        PluginAnon.model = type(
-            s.join([class_prefix, "Model"]),
-            (BaseModel if columns is not None else ScalarModel,),
-            modelAttributes
+        # Use a dummy Schedule for pretty-printing (epoch doesn't matter)
+        sched = str(Schedule(interval, datetime.datetime.now()))
+        plugin = type(
+            sched.join([class_prefix, "Plugin"]),
+            (mixin_class, BasePlugin),
+            { 'interval': interval }
         )
-        yield PluginAnon
+        attributes = { '__tablename__': table_prefix + sched }
+        attributes.update(copy.deepcopy(columns or {}))
+        plugin.model = type(
+            sched.join([class_prefix, "Model"]),
+            (BaseModel,),
+            attributes
+        )
+        yield plugin

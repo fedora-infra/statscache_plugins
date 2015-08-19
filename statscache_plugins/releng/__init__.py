@@ -15,16 +15,13 @@ class Plugin(statscache.plugins.BasePlugin):
     Recent release engineering event logs to be used for rendering
     release engineering dashboard.
     """
-    interval = datetime.timedelta(minutes=5)
-    datagrepper_endpoint = 'https://apps.fedoraproject.org/datagrepper/raw/'
 
-    def __init__(self, frequency, config):
-        super(Plugin, self).__init__(frequency, config)
-        self._plugins = None
+    def __init__(self, *args, **kwargs):
+        super(Plugin, self).__init__(*args, **kwargs)
         self._plugins = self.load_plugins()
 
     class Model(statscache.plugins.ConstrainedCategorizedLogModel):
-            __tablename__ = 'data_releng_dashboard'
+        __tablename__ = 'data_releng_dashboard'
 
     model = Model
 
@@ -139,23 +136,24 @@ class Plugin(statscache.plugins.BasePlugin):
             }
         }
 
-    def handle(self, session, messages):
-        rows = []
-        try:
-            for plugin in self._plugins:
-                try:
-                    rows.extend(plugin.handle(session, messages) or [])
-                except Exception as e:
-                    log.exception(
-                        "Error in releng plugin '{}': {}".format(
-                            plugin.ident, e), exc_info=True)
-            # FIXME: need to write in a single db hit
-            session.add_all(rows)
-            session.commit()
-        except Exception as e:
-            log.exception(
-                "Error in releng plugin: {}".format(e), exc_info=True)
-            session.flush()
+    def process(self, message):
+        for plugin in self._plugins:
+            try:
+                plugin.process(message)
+            except Exception as e:
+                log.exception(
+                    "Error in releng plugin '{}': {}".format(
+                        plugin.ident, e), exc_info=True)
+
+    def update(self, session):
+        for plugin in self._plugins:
+            try:
+                plugin.update(session)
+            except Exception as e:
+                log.exception(
+                    "Error in releng plugin '{}': {}".format(
+                        plugin.ident, e), exc_info=True)
+                session.rollback()
 
     def initialize(self, session):
         for plugin in self._plugins:
@@ -172,7 +170,6 @@ class Plugin(statscache.plugins.BasePlugin):
         pass
 
     def load_plugins(self):
-        # TODO: plugins for a plugin? This shoudln't be necessary
         if getattr(self, '_plugins', None):
             return self._plugins
         self._plugins = []
@@ -185,7 +182,7 @@ class Plugin(statscache.plugins.BasePlugin):
             if plugin and issubclass(plugin,
                                     statscache.plugins.BasePlugin):
                 log.info("Loading plugin %r" % plugin)
-                self._plugins.append(plugin(self.frequency, self.config,
+                self._plugins.append(plugin(self.schedule, self.config,
                                             model=self.model))
             else:
                 log.info("Not loading %r.  Not a plugin." % plugin)
