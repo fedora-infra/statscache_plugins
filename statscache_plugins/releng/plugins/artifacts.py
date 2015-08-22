@@ -42,7 +42,7 @@ class Plugin(statscache.plugins.BasePlugin):
             'link': link,
             'status': message['msg']['new'],
             'extra_text': '(details)',
-            'extra_link': message['meta']['link']
+            'extra_link': message.get('meta', { 'link': None })['link']
         })
         self._queue[(category, category_constraint)] = (timestamp, msg)
 
