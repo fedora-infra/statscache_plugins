@@ -2,13 +2,13 @@ from __future__ import absolute_import
 import datetime
 import json
 
-import statscache.api.plugins
+import statscache.plugins
 
 import logging
 log = logging.getLogger("statscache")
 
 
-class Plugin(statscache.api.plugins.BasePlugin):
+class Plugin(statscache.plugins.BasePlugin):
     name = "releng, updates"
     summary = "Updates to yum repos"
     description = """

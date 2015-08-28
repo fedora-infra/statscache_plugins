@@ -3,12 +3,12 @@ import os.path
 import pkgutil
 import datetime
 
-import statscache.api.plugins
+import statscache.plugins
 
 log = logging.getLogger('statscache')
 
 
-class Plugin(statscache.api.plugins.BasePlugin):
+class Plugin(statscache.plugins.BasePlugin):
     name = "Release engineering event logs"
     summary = "Release engineering event logs, organized by category."
     description = """
@@ -20,7 +20,7 @@ class Plugin(statscache.api.plugins.BasePlugin):
         super(Plugin, self).__init__(*args, **kwargs)
         self._plugins = self.load_plugins()
 
-    class Model(statscache.api.plugins.ConstrainedCategorizedLogModel):
+    class Model(statscache.plugins.ConstrainedCategorizedLogModel):
         __tablename__ = 'data_releng_dashboard'
 
     model = Model
@@ -180,7 +180,7 @@ class Plugin(statscache.api.plugins.BasePlugin):
                 package_name).load_module(full_package_name)
             plugin = getattr(module, 'Plugin', None)
             if plugin and issubclass(plugin,
-                                    statscache.api.plugins.BasePlugin):
+                                    statscache.plugins.BasePlugin):
                 log.info("Loading plugin %r" % plugin)
                 self._plugins.append(plugin(self.schedule, self.config,
                                             model=self.model))

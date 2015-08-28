@@ -1,11 +1,11 @@
 from __future__ import absolute_import
-import statscache.api.plugins
+import statscache.plugins
 
 import datetime
 import json
 
 
-class Plugin(statscache.api.plugins.BasePlugin):
+class Plugin(statscache.plugins.BasePlugin):
     name = "releng, artifacts"
     summary = "Build logs for successful upload/test of cloud images"
     description = """
