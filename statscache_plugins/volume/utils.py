@@ -1,8 +1,8 @@
 import copy
 import datetime
 import collections
-from statscache.schedule import Schedule
-from statscache.plugins import BasePlugin, BaseModel, ScalarModel
+from statscache.api.schedule import Schedule
+from statscache.api.plugins import BasePlugin, BaseModel, ScalarModel
 
 
 class VolumePluginMixin(object):

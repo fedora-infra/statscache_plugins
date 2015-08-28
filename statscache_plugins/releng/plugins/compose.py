@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import statscache.plugins
+import statscache.api.plugins
 
 import datetime
 import json
@@ -7,7 +7,7 @@ import re
 import requests
 
 
-class Plugin(statscache.plugins.BasePlugin):
+class Plugin(statscache.api.plugins.BasePlugin):
     name = "releng, compose"
     summary = "Compose logs"
     description = """

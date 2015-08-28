@@ -2,10 +2,10 @@ from __future__ import absolute_import
 import datetime
 import json
 
-import statscache.plugins
+import statscache.api.plugins
 
 
-class Plugin(statscache.plugins.BasePlugin):
+class Plugin(statscache.api.plugins.BasePlugin):
     name = "releng, amis"
     summary = "Build logs for successful upload/test of cloud images"
     description = """
