@@ -1,9 +1,9 @@
 import unittest
 import datetime
-import statscache.frequency
+import statscache.utils
 import statscache.plugins
+import statscache.plugins.schedule
 import statscache_plugins.volume.by_category
-from sqlalchemy import create_engine
 
 
 class TestVolumePlugin(unittest.TestCase):
@@ -17,17 +17,16 @@ class TestVolumePlugin(unittest.TestCase):
 
     def _make_session(self):
         uri = self.config['statscache.sqlalchemy.uri']
-        statscache.plugins.create_tables(uri)
-        return statscache.plugins.init_model(uri)
+        statscache.utils.create_tables(uri)
+        return statscache.utils.init_model(uri)
 
     def test_init(self):
-        frequency = statscache.frequency.Frequency(
-            statscache_plugins.volume.by_category.OneMinuteFrequencyPlugin.interval,
-            datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0))
-        plugin = statscache_plugins.volume.by_category.OneMinuteFrequencyPlugin(frequency,
-                                                                                self.config)
-        session = self._make_session()
-        plugin.initialize(session)
+        schedule = statscache.plugins.schedule.Schedule(
+            interval=datetime.timedelta(minutes=1))
+        plugins = statscache_plugins.volume.by_category.plugins
+        plugin = list(plugins)[0](schedule, self.config)
+        #session = self._make_session()
+        #plugin.fill(session) ... # we should test things like this and other behaviors.
 
 if __name__ == '__main__':
     unittest.main()
