@@ -1,3 +1,70 @@
+
+0.0.2
+-----
+
+Pull Requests
+
+- (@yazman)         #5, Fix SQLAlchemy Warning
+  https://github.com/fedora-infra/statscache_plugins/pull/5
+- (@yazman)         #6, Dynamic scheduling based on plugins
+  https://github.com/fedora-infra/statscache_plugins/pull/6
+- (@yazman)         #7, Dynamic scheduling
+  https://github.com/fedora-infra/statscache_plugins/pull/7
+- (@yazman)         #8, Refactor model class creation out of plugin initialization
+  https://github.com/fedora-infra/statscache_plugins/pull/8
+- (@yazman)         #9, Real-time message processing and synchronized database updates: plugin support
+  https://github.com/fedora-infra/statscache_plugins/pull/9
+- (@yazman)         #10, Add missing import
+  https://github.com/fedora-infra/statscache_plugins/pull/10
+- (@yazman)         #11, Streamlined API for plugins: plugin support
+  https://github.com/fedora-infra/statscache_plugins/pull/11
+- (@yazman)         #12, Suppress common error in releng artifacts
+  https://github.com/fedora-infra/statscache_plugins/pull/12
+
+Commits
+
+- 670ca50b9 Dynamically generate declarative model classes
+  https://github.com/fedora-infra/statscache_plugins/commit/670ca50b9
+- 359cb0b75 Update ``plugin.idx`` to ``plugin.ident``
+  https://github.com/fedora-infra/statscache_plugins/commit/359cb0b75
+- 356d1ed75 Make plugin entry-points to classes or collections
+  https://github.com/fedora-infra/statscache_plugins/commit/356d1ed75
+- db2ab8e78 Include timestamp in handle() methods of plugins
+  https://github.com/fedora-infra/statscache_plugins/commit/db2ab8e78
+- c518929fc Switch to statscache.plugins.Frequency
+  https://github.com/fedora-infra/statscache_plugins/commit/c518929fc
+- 23fa4e996 Use updated statscache.plugins.Frequency class
+  https://github.com/fedora-infra/statscache_plugins/commit/23fa4e996
+- 7889c351b Use interval timedeltas instead of Frequency
+  https://github.com/fedora-infra/statscache_plugins/commit/7889c351b
+- c75d3f476 Update current unit tests
+  https://github.com/fedora-infra/statscache_plugins/commit/c75d3f476
+- 63ec2382e Remove timestamp from plugin handle() method
+  https://github.com/fedora-infra/statscache_plugins/commit/63ec2382e
+- 82bbeb70e Remove timestamp argument from handle() calls
+  https://github.com/fedora-infra/statscache_plugins/commit/82bbeb70e
+- dc95bb773 Use generator for programmatic model creation
+  https://github.com/fedora-infra/statscache_plugins/commit/dc95bb773
+- ca3a36da0 Split handle() method into process() and update()
+  https://github.com/fedora-infra/statscache_plugins/commit/ca3a36da0
+- 6c19814c0 Eliminate initializa() methods
+  https://github.com/fedora-infra/statscache_plugins/commit/6c19814c0
+- c7bc0c60e Explicitly give dummy epochs for dummy Frequencies
+  https://github.com/fedora-infra/statscache_plugins/commit/c7bc0c60e
+- eb5eb4bb6 Rename Frequency to Schedule
+  https://github.com/fedora-infra/statscache_plugins/commit/eb5eb4bb6
+- 7aeb8fe49 Remove unnecessary variables
+  https://github.com/fedora-infra/statscache_plugins/commit/7aeb8fe49
+- d249d5220 Refactor model update logic for volume plugins
+  https://github.com/fedora-infra/statscache_plugins/commit/d249d5220
+- 060250c3a Add missing import
+  https://github.com/fedora-infra/statscache_plugins/commit/060250c3a
+- 67cc6d48e Update imports to use the new public API
+  https://github.com/fedora-infra/statscache_plugins/commit/67cc6d48e
+- 11bfc4c6c Use new consolidated plugin API
+  https://github.com/fedora-infra/statscache_plugins/commit/11bfc4c6c
+- 5e40c7fcc Suppress common error in releng artifacts
+  https://github.com/fedora-infra/statscache_plugins/commit/5e40c7fcc
 Changelog
 =========
 
