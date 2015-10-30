@@ -17,7 +17,7 @@ tests_require = [
 
 setup(
     name='statscache_plugins',
-    version='0.0.1',
+    version='0.0.2',
     description='Plugins for statscache, the fedmsg statistics daemon',
     long_description=get_description(),
     author='Ralph Bean',
