@@ -155,17 +155,6 @@ class Plugin(statscache.plugins.BasePlugin):
                         plugin.ident, e), exc_info=True)
                 session.rollback()
 
-    def initialize(self, session):
-        for plugin in self._plugins:
-            if getattr(plugin, 'initialize', None) is None:
-                continue
-            try:
-                plugin.initialize(session, self.datagrepper_endpoint)
-            except Exception as e:
-                log.exception(
-                    "Error during initializing releng plugin '{}': {}".format(
-                        plugin.ident, e), exc_info=True)
-
     def cleanup(self):
         pass
 

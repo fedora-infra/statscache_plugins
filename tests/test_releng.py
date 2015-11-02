@@ -2,7 +2,6 @@ import unittest
 import datetime
 import statscache.utils
 import statscache.plugins
-import statscache.plugins.schedule
 import statscache_plugins.releng
 
 
@@ -21,11 +20,8 @@ class TestRelengPlugin(unittest.TestCase):
         return statscache.utils.init_model(uri)
 
     def test_init(self):
-        schedule = statscache.plugins.schedule.Schedule(
-            interval=datetime.timedelta(minutes=5))
-        plugin = statscache_plugins.releng.Plugin(schedule, self.config)
-        session = self._make_session()
-        plugin.initialize(session)
+        """ Test the ability of the releng plugin(s) to initialize """
+        return statscache_plugins.releng.Plugin(None, self.config)
 
 if __name__ == '__main__':
     unittest.main()

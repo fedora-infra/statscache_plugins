@@ -2,7 +2,6 @@ import unittest
 import datetime
 import statscache.utils
 import statscache.plugins
-import statscache.plugins.schedule
 import statscache_plugins.volume.by_category
 
 
@@ -21,12 +20,10 @@ class TestVolumePlugin(unittest.TestCase):
         return statscache.utils.init_model(uri)
 
     def test_init(self):
-        schedule = statscache.plugins.schedule.Schedule(
-            interval=datetime.timedelta(minutes=1))
-        plugins = statscache_plugins.volume.by_category.plugins
-        plugin = list(plugins)[0](schedule, self.config)
-        #session = self._make_session()
-        #plugin.fill(session) ... # we should test things like this and other behaviors.
+        """ Test the ability of an arbitrary volume plugin to initialize itself """
+        plugin_class = list(statscache_plugins.volume.by_category.plugins)[-1]
+        schedule = statscache.plugins.Schedule(interval=plugin_class.interval)
+        return plugin_class(schedule, self.config)
 
 if __name__ == '__main__':
     unittest.main()
