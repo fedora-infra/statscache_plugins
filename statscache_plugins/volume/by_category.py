@@ -22,8 +22,15 @@ class PluginMixin(VolumePluginMixin):
         self._volumes[(category, timestamp)] += 1
 
 
+resolutions = [
+    1,      # one second
+    15,     # fifteen seconds
+    60,     # one minute
+    3600,   # one hour
+    86400,  # one day
+]
 plugins = plugin_factory(
-    [datetime.timedelta(seconds=s) for s in [1, 5, 60]],
+    [datetime.timedelta(seconds=s) for s in resolutions],
     PluginMixin,
     "VolumeByCategory",
     "data_volume_by_category_",
