@@ -70,7 +70,7 @@ class Plugin(statscache.plugins.BasePlugin):
     def get_srpm_details(self, msg):
         tokens = msg['srpm'].split('-')
         arch = tokens[-1]
-        info = msg.get('info')
+        info = msg.get('info', {})
         srpm = msg['srpm']
         if isinstance(info, dict):
             options = info['request'][-1]
