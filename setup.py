@@ -45,6 +45,9 @@ setup(
             "volume_by_category = statscache_plugins.volume.by_category:plugins",
             #"volume_by_user = statscache_plugins.volume.by_user:plugins",
             #"volume_by_package = statscache_plugins.volume.by_package:plugins",
+            "pagure = statscache_plugins.pagure.pagure_contribution:plugins",
+            "pagure_users = statscache_plugins.pagure.pagure_users_contribution:plugins",
+            "pagure_project = statscache_plugins.pagure.pagure_project_contribution:plugins",
         ]
     },
 )
